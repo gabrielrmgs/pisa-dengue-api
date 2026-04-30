@@ -10,8 +10,6 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import java.util.Objects;
 
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 import org.locationtech.jts.geom.MultiPolygon;
 
 @Entity
@@ -28,7 +26,6 @@ public class Bairro {
     private Municipio municipio;
 
     @Column(columnDefinition = "geometry(MultiPolygon, 4326)")
-    @JdbcTypeCode(SqlTypes.GEOMETRY)
     private MultiPolygon geometria;
 
 

@@ -41,7 +41,7 @@ public class AuthService {
                 .subject(usuario.getId().toString())
                 .claim("nome", usuario.getNome())
                 .claim("email", usuario.getEmail())
-                .claim("perfil", usuario.getRole().name())
+                .claim("groups", usuario.getRole().name())
                 .expiresIn(Duration.ofHours(8))
                 .sign();
                 

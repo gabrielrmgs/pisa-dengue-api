@@ -1,5 +1,6 @@
 package br.com.gemsbiotec.dominio.geo;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,6 +23,7 @@ public class Municipio {
     @ManyToOne
     @JoinColumn(name = "estado_id")
     private Estado estado;
+    @Column(name = "codigoIbge")
     private String codigoIbge;
     private int populacao;
     private boolean ativo;

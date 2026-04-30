@@ -131,6 +131,12 @@
             <version>30.0</version>
         </dependency>
 
+        <!-- Source: https://mvnrepository.com/artifact/org.hibernate/hibernate-spatial -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-spatial</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
