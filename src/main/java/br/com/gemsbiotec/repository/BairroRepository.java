@@ -31,7 +31,7 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
     }
 
     public List<Bairro> listByMunicipio(Long municipioId) {
-        return list("municipio.id = ?1 ORDER BY nmBairro", municipioId);
+        return list("municipio.id = ?1 ORDER BY nome", municipioId);
     }
 
     public boolean existsByCdBairro(String cdBairro) {
