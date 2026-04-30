@@ -41,11 +41,11 @@ public class AuthService {
                 .subject(usuario.getId().toString())
                 .claim("nome", usuario.getNome())
                 .claim("email", usuario.getEmail())
+                .claim("municipio_id", usuario.getMunicipioId())
                 .claim("groups", usuario.getRole().name())
                 .expiresIn(Duration.ofHours(8))
                 .sign();
                 
-                //.claim("municipio_id", usuario.getMunicipioId())
         return new LoginResponse(token, usuario.getNome(), usuario.getRole());
     }
 
