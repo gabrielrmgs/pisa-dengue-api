@@ -1,18 +1,34 @@
 package br.com.gemsbiotec.dominio.geo;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import net.postgis.jdbc.geometry.MultiPolygon;
 import java.util.Objects;
+
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+import org.locationtech.jts.geom.MultiPolygon;
 
 @Entity
 @Table
 public class Bairro {
 
+    @Id
+    @SequenceGenerator(name = "bairro_seq_gen", sequenceName = "bairro_seq")
+    @GeneratedValue(generator = "bairro_seq_gen", strategy = GenerationType.SEQUENCE)
     private Long id;
     private String nome;
     private String codigo;
+    @ManyToOne
     private Municipio municipio;
+
+    @Column(columnDefinition = "geometry(MultiPolygon, 4326)")
+    @JdbcTypeCode(SqlTypes.GEOMETRY)
     private MultiPolygon geometria;
 
 

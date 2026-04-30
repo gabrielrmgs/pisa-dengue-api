@@ -29,7 +29,7 @@ public class Estado {
      * Nunca carregue esta coleção diretamente — use MunicipioRepository.
      */
     @OneToMany(mappedBy = "estado", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    public List<Municipio> municipios = new ArrayList<>();
+    private List<Municipio> municipios = new ArrayList<>();
 
 
     public Estado() {

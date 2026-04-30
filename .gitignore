@@ -43,3 +43,14 @@ nb-configuration.xml
 /.quarkus/cli/plugins/
 # TLS Certificates
 .certs/
+
+# Docker
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+**/privateKey.pem
+
+src/main/resources/certs/privateKey.pem
