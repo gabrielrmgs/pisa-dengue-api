@@ -1,6 +1,5 @@
 package br.com.gemsbiotec.repository;
 
-
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -9,6 +8,7 @@ import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.Optional;
 
+import br.com.gemsbiotec.auth.TenantContext;
 import br.com.gemsbiotec.dominio.geo.Bairro;
 
 /**
@@ -21,10 +21,18 @@ import br.com.gemsbiotec.dominio.geo.Bairro;
 @ApplicationScoped
 public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
 
-    @Inject
-    EntityManager em;
+    private EntityManager em;
+    private TenantContext tenantContext;
 
-    // ── lookups básicos ───────────────────────────────────────────────────────
+    @Inject
+    public BairroRepository(EntityManager em, TenantContext tenantContext) {
+        this.em = em;
+        this.tenantContext = tenantContext;
+    }
+
+    public List<Bairro> listar() {
+        return list("municipio.id = ?1 ORDER BY nome", tenantContext.getMunicipioId());
+    }
 
     public Optional<Bairro> findByCdBairro(String cdBairro) {
         return find("cdBairro", cdBairro).firstResultOptional();
@@ -75,8 +83,8 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
                     ORDER BY b.nm_bairro
                 ) sub
                 """)
-            .setParameter("municipioId", municipioId)
-            .getSingleResult();
+                .setParameter("municipioId", municipioId)
+                .getSingleResult();
     }
 
     /**
@@ -88,9 +96,9 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
      * quando não há casos, nunca NULL.
      *
      * A propriedade "casos" é o que o Leaflet usa para colorir o choropleth:
-     *   function getColor(d) {
-     *     return d > 50 ? '#d73027' : d > 20 ? '#fc8d59' : '#fee08b';
-     *   }
+     * function getColor(d) {
+     * return d > 50 ? '#d73027' : d > 20 ? '#fc8d59' : '#fee08b';
+     * }
      *
      * @param municipioId Long do tenant
      * @param ano         Ano de notificação (0 = todos)
@@ -132,10 +140,10 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
                     ORDER BY b.nm_bairro
                 ) sub
                 """)
-            .setParameter("municipioId", municipioId)
-            .setParameter("ano", ano)
-            .setParameter("mes", mes)
-            .getSingleResult();
+                .setParameter("municipioId", municipioId)
+                .setParameter("ano", ano)
+                .setParameter("mes", mes)
+                .getSingleResult();
     }
 
     // ── resolução geoespacial de bairro a partir de ponto ────────────────────
@@ -148,8 +156,8 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
      * ST_Within(ponto, polígono) usa o índice GIST em bairros.geometria —
      * a query é O(log n), não um full scan.
      *
-     * @param longitude Longitude WGS84 do ponto (ex: -44.3577)
-     * @param latitude  Latitude  WGS84 do ponto (ex: -9.0713)
+     * @param longitude   Longitude WGS84 do ponto (ex: -44.3577)
+     * @param latitude    Latitude WGS84 do ponto (ex: -9.0713)
      * @param municipioId Tenant — restringe a busca ao município correto
      */
     public Optional<Bairro> findBairroQueContemPonto(
@@ -163,12 +171,12 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
                         b.geometria
                       ) = true
                 """, Bairro.class)
-            .setParameter("municipioId", municipioId)
-            .setParameter("lon", longitude)
-            .setParameter("lat", latitude)
-            .setMaxResults(1)
-            .getResultStream()
-            .findFirst();
+                .setParameter("municipioId", municipioId)
+                .setParameter("lon", longitude)
+                .setParameter("lat", latitude)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
     }
 
     /**
@@ -179,8 +187,8 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
      * ST_Distance com índice GIST usa KNN (K-Nearest Neighbor) — eficiente
      * mesmo com centenas de bairros.
      *
-     * @param longitude Longitude WGS84
-     * @param latitude  Latitude  WGS84
+     * @param longitude   Longitude WGS84
+     * @param latitude    Latitude WGS84
      * @param municipioId Tenant
      */
     public Optional<Bairro> findBairroMaisProximo(
@@ -194,11 +202,11 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
                     ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)
                 )
                 """, Bairro.class)
-            .setParameter("municipioId", municipioId)
-            .setParameter("lon", longitude)
-            .setParameter("lat", latitude)
-            .setMaxResults(1)
-            .getResultStream()
-            .findFirst();
+                .setParameter("municipioId", municipioId)
+                .setParameter("lon", longitude)
+                .setParameter("lat", latitude)
+                .setMaxResults(1)
+                .getResultStream()
+                .findFirst();
     }
 }

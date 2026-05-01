@@ -37,13 +37,13 @@ public class AuthService {
 
         usuario.setUltimoLogin(LocalDateTime.now());
 
-        String token = Jwt.issuer("previsync")
+        String token = Jwt.issuer("pisa-dengue-api")
                 .subject(usuario.getId().toString())
                 .claim("nome", usuario.getNome())
                 .claim("email", usuario.getEmail())
-                .claim("municipio_id", usuario.getMunicipioId())
-                .claim("groups", usuario.getRole().name())
-                .expiresIn(Duration.ofHours(8))
+                .claim("municipio_id", usuario.getMunicipioId().toString())
+                .groups(usuario.getRole().name())
+                .expiresIn(Duration.ofHours(6))
                 .sign();
                 
         return new LoginResponse(token, usuario.getNome(), usuario.getRole());

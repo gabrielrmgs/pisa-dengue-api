@@ -1,11 +1,8 @@
 package br.com.gemsbiotec.auth;
 
-import br.com.gemsbiotec.auth.LoginRequest;
-import br.com.gemsbiotec.auth.AuthService;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
