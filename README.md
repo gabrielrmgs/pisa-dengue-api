@@ -1,90 +1,225 @@
-# pisa-dengue-api
+# 🦟 Pisa Dengue API
 
-This project uses Quarkus, the Supersonic Subatomic Java Framework.
+API backend desenvolvida com **Quarkus** para monitoramento e análise de dados epidemiológicos de dengue, com suporte a **multi-tenant por município**, integração com **InfoDengue** e visualização geoespacial via **GeoJSON**.
 
-If you want to learn more about Quarkus, please visit its website: <https://quarkus.io/>.
+---
 
-## Running the application in dev mode
+## 🚀 Tecnologias utilizadas
 
-You can run your application in dev mode that enables live coding using:
+* Java 21+
+* Quarkus
+* Hibernate ORM + Panache
+* PostgreSQL + PostGIS
+* Flyway (migrações)
+* JWT (SmallRye JWT)
+* REST Client (MicroProfile)
+* GeoTools + JTS (processamento de shapefiles)
+* Docker + Docker Compose
 
-```shell script
-./mvnw quarkus:dev
+---
+
+## 🧠 Funcionalidades
+
+### 🔐 Autenticação e Autorização
+
+* Login com JWT
+* Controle de acesso por roles (ADMIN, etc)
+* Multi-tenant baseado em `municipio_id`
+* Filtro global (`TenantFilter`) para injeção de contexto
+
+---
+
+### 🗺️ Dados Geoespaciais
+
+* Importação de shapefiles do IBGE
+* Persistência de geometrias no PostGIS
+* Conversão para **GeoJSON**
+* Endpoint para consumo no frontend (Leaflet, etc)
+
+---
+
+### 🏥 Integração com InfoDengue
+
+* Consumo da API pública da Fiocruz
+* Cache de dados por município e ano
+* Agregações para dashboard:
+
+  * Casos no ano
+  * Casos no mês
+  * Incidência acumulada
+  * Último nível de alerta
+
+---
+
+### 📊 Dashboard Epidemiológico
+
+* Dados consolidados por município
+* Histórico multi-ano (2023–2026)
+* Preparado para gráficos e mapas interativos
+
+---
+
+## 📦 Como rodar o projeto
+
+### Pré-requisitos
+
+* Docker instalado
+* Java 21+
+* Maven (ou usar wrapper)
+
+---
+
+### 🐳 Subindo com Docker
+
+```bash
+mvn clean package
+docker compose up --build -d
 ```
 
-> **_NOTE:_**  Quarkus now ships with a Dev UI, which is available in dev mode only at <http://localhost:8080/q/dev/>.
+A API estará disponível em:
 
-## Packaging and running the application
-
-The application can be packaged using:
-
-```shell script
-./mvnw package
+```
+http://localhost:8081
 ```
 
-It produces the `quarkus-run.jar` file in the `target/quarkus-app/` directory.
-Be aware that it’s not an _über-jar_ as the dependencies are copied into the `target/quarkus-app/lib/` directory.
+---
 
-The application is now runnable using `java -jar target/quarkus-app/quarkus-run.jar`.
+## 🔑 Autenticação
 
-If you want to build an _über-jar_, execute the following command:
+### Criar usuário admin
 
-```shell script
-./mvnw package -Dquarkus.package.jar.type=uber-jar
+```bash
+curl -X POST http://localhost:8081/auth/criarAdmin \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@admin.com",
+    "senha": "admin"
+  }'
 ```
 
-The application, packaged as an _über-jar_, is now runnable using `java -jar target/*-runner.jar`.
+---
 
-## Creating a native executable
+### Login
 
-You can create a native executable using:
-
-```shell script
-./mvnw package -Dnative
+```bash
+curl -X POST http://localhost:8081/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "admin@admin.com",
+    "senha": "admin"
+  }'
 ```
 
-Or, if you don't have GraalVM installed, you can run the native executable build in a container using:
+Resposta:
 
-```shell script
-./mvnw package -Dnative -Dquarkus.native.container-build=true
+```json
+{
+  "token": "JWT_AQUI"
+}
 ```
 
-You can then execute your native executable with: `./target/pisa-dengue-api-1.0.0-SNAPSHOT-runner`
+---
 
-If you want to learn more about building native executables, please consult <https://quarkus.io/guides/maven-tooling>.
+### Uso do token
 
-## Related Guides
+```bash
+Authorization: Bearer SEU_TOKEN
+```
 
-- REST ([guide](https://quarkus.io/guides/rest)): A Jakarta REST implementation utilizing build time processing and Vert.x. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it.
-- Flyway ([guide](https://quarkus.io/guides/flyway)): Handle your database schema migrations
-- REST Client ([guide](https://quarkus.io/guides/rest-client)): Call REST services
-- REST Jackson ([guide](https://quarkus.io/guides/rest#json-serialisation)): Jackson serialization support for Quarkus REST. This extension is not compatible with the quarkus-resteasy extension, or any of the extensions that depend on it
-- Elytron Security JDBC ([guide](https://quarkus.io/guides/security-jdbc)): Secure your applications with username/password stored in a database
-- Hibernate ORM with Panache ([guide](https://quarkus.io/guides/hibernate-orm-panache)): Simplify your persistence code for Hibernate ORM via the active record or the repository pattern
-- SmallRye JWT ([guide](https://quarkus.io/guides/security-jwt)): Secure your applications with JSON Web Token
-- SmallRye JWT Build ([guide](https://quarkus.io/guides/security-jwt-build)): Create JSON Web Token with SmallRye JWT Build API
-- JDBC Driver - PostgreSQL ([guide](https://quarkus.io/guides/datasource)): Connect to the PostgreSQL database via JDBC
+---
 
-## Provided Code
+## 🧩 Multi-Tenancy
 
-### Hibernate ORM
+A aplicação utiliza **isolamento por município**:
 
-Create your first JPA entity
+* O `municipio_id` é embutido no JWT
+* Um `TenantFilter` intercepta todas as requisições
+* O `TenantContext` armazena o município do usuário logado
+* Todas as queries são filtradas automaticamente
 
-[Related guide section...](https://quarkus.io/guides/hibernate-orm)
+👉 Isso impede acesso a dados de outros municípios (ex: `/bairro/999`)
 
+---
 
-[Related Hibernate with Panache section...](https://quarkus.io/guides/hibernate-orm-panache)
+## 🌎 Endpoint GeoJSON
 
+```http
+GET /mapa/geojson
+```
 
-### REST Client
+Retorna:
 
-Invoke different services through REST with JSON
+```json
+{
+  "type": "FeatureCollection",
+  "features": [...]
+}
+```
 
-[Related guide section...](https://quarkus.io/guides/rest-client)
+✔ Já filtrado pelo município do usuário
+✔ Pronto para uso com Leaflet
 
-### REST
+---
 
-Easily start your REST Web Services
+## 📊 Dashboard
 
-[Related guide section...](https://quarkus.io/guides/getting-started-reactive#reactive-jax-rs-resources)
+### Endpoint principal
+
+```http
+GET /dashboard
+```
+
+Resposta:
+
+```json
+{
+  "totalCasosAno": 1234,
+  "totalCasosMes": 120,
+  "incidencia": 456.7,
+  "nivelAlerta": "Alto",
+  "corAlerta": "#f97316"
+}
+```
+
+---
+
+### Histórico (2023–2026)
+
+```http
+GET /dashboard/historico
+```
+
+Retorna séries separadas por ano para gráficos.
+
+---
+
+## 📁 Estrutura do projeto
+
+```
+src/main/java/br/com/gemsbiotec
+├── auth/                # Autenticação e JWT
+├── dominio/             # Entidades (Usuario, Municipio, Bairro...)
+├── repository/          # Repositórios Panache
+├── security/            # TenantContext e filtros
+├── shapefile/           # Importação geoespacial
+├── integration/         # Integrações externas (InfoDengue)
+├── resource/            # Endpoints REST
+```
+
+---
+
+## ⚠️ Observações importantes
+
+* O projeto usa **PostGIS**, então o banco precisa ter a extensão ativada:
+
+```sql
+CREATE EXTENSION postgis;
+```
+
+* Após `docker compose down -v`, o banco é recriado do zero
+
+---
+
+## 👨‍💻 Autor
+
+Desenvolvido por **Gabriel Sá**
