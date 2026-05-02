@@ -13,6 +13,8 @@ services:
     volumes:
       - postgres_pisa_data:/var/lib/postgresql/data
       - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - pisa-net
 
   api:
     build: .
@@ -26,6 +28,12 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:8081"
+    networks:
+      - pisa-net
+
+networks:
+  pisa-net:
+    driver: bridge
 
 volumes:
   postgres_pisa_data:
