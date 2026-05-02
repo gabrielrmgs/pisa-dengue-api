@@ -28,4 +28,4 @@ services:
       - "8081:8081"
 
 volumes:
-  postgres_data:
+  postgres_pisa_data:
