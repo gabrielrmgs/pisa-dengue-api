@@ -41,11 +41,13 @@ public class AuthService {
                 .subject(usuario.getId().toString())
                 .claim("nome", usuario.getNome())
                 .claim("email", usuario.getEmail())
-                .claim("municipio_id", usuario.getMunicipioId().toString())
+                .claim("municipio_id",
+                        (usuario.isAdmin() && usuario.getMunicipioId() == null) ? ""
+                                : usuario.getMunicipioId().toString())
                 .groups(usuario.getRole().name())
                 .expiresIn(Duration.ofHours(6))
                 .sign();
-                
+
         return new LoginResponse(token, usuario.getNome(), usuario.getRole());
     }
 
