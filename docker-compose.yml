@@ -12,20 +12,33 @@ services:
       - "5439:5432"
     volumes:
       - postgres_pisa_data:/var/lib/postgresql/data
-      #- ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - pisa-net
 
   api:
     build: .
     container_name: pisa-dengue-api
     restart: always
     depends_on:
-      - postgres-pisa
+      postgres-pisa:
+        condition: service_healthy
     environment:
       QUARKUS_DATASOURCE_JDBC_URL: ${DB_URL}
       QUARKUS_DATASOURCE_USERNAME: ${DB_USER}
       QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD}
     ports:
       - "8081:8081"
+    networks:
+      - pisa-net
+
+networks:
+  pisa-net:
+    driver: bridge
 
 volumes:
   postgres_pisa_data:
