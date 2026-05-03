@@ -22,6 +22,10 @@ import br.com.gemsbiotec.repository.EstadoRepository;
 import br.com.gemsbiotec.repository.MunicipioRepository;
 
 import java.io.File;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -41,13 +45,60 @@ public class ShapefileService {
 
     @Transactional
     public String importarBairrosPiaui() throws Exception {
-        // Caminho do arquivo. Ajuste para onde você descompactou os arquivos do IBGE
-        File file = new File("src\\main\\resources\\shapefiles\\PI_bairros_CD2022.shp");
 
+        // // 1. Pega o recurso do JAR
+        // InputStream is = getClass().getClassLoader().getResourceAsStream("shapefiles/PI_bairros_CD2022.shp");
+
+        // // 2. Cria um arquivo temporário no sistema de arquivos do Linux (Docker)
+        // Path tempFile = Files.createTempFile("mapa_", ".shp");
+        // Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+        // // 3. Usa o arquivo temporário
+        // File file = tempFile.toFile();
+
+        // // Caminho do arquivo. Ajuste para onde você descompactou os arquivos do IBGE
+        // // File file = new
+        // // File("src\\main\\resources\\shapefiles\\PI_bairros_CD2022.shp");
+
+        // Map<String, Object> map = new HashMap<>();
+        // map.put("url", file.toURI().toURL());
+
+        // 1. Cria um diretório temporário no Linux para hospedar todos os arquivos do
+        // Shapefile
+        Path tempDir = Files.createTempDirectory("shape_piaui_");
+
+        String baseName = "PI_bairros_CD2022";
+        String[] extensoes = { ".shp", ".shx", ".dbf", ".prj", ".cpg" }; // Arquivos que compõem o shapefile
+        File mainShapeFile = null;
+
+        // 2. Extrai cada arquivo do JAR para o diretório temporário
+        for (String ext : extensoes) {
+            String fileName = baseName + ext;
+            InputStream is = getClass().getClassLoader().getResourceAsStream("shapefiles/" + fileName);
+
+            if (is != null) {
+                Path tempFile = tempDir.resolve(fileName);
+                Files.copy(is, tempFile, StandardCopyOption.REPLACE_EXISTING);
+
+                // Guarda a referência do .shp principal para passar para o GeoTools
+                if (ext.equals(".shp")) {
+                    mainShapeFile = tempFile.toFile();
+                }
+            }
+        }
+
+        if (mainShapeFile == null) {
+            throw new RuntimeException("Arquivo principal .shp não encontrado nos resources.");
+        }
+
+        // 3. Passa o arquivo .shp (que agora está junto com seus irmãos .dbf, .shx)
+        // para o GeoTools
         Map<String, Object> map = new HashMap<>();
-        map.put("url", file.toURI().toURL());
+        map.put("url", mainShapeFile.toURI().toURL());
 
         DataStore dataStore = DataStoreFinder.getDataStore(map);
+
+      //  DataStore dataStore = DataStoreFinder.getDataStore(map);
         String typeName = dataStore.getTypeNames()[0];
         FeatureSource<SimpleFeatureType, SimpleFeature> source = dataStore.getFeatureSource(typeName);
 
