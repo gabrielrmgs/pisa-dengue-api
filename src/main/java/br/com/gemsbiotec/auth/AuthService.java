@@ -37,16 +37,11 @@ public class AuthService {
 
         usuario.setUltimoLogin(LocalDateTime.now());
 
-        System.out.println((usuario.isAdmin() && usuario.getMunicipioId() == null) ? "N/A"
-                : usuario.getMunicipioId().toString());
-
         String token = Jwt.issuer("pisa-dengue-api")
                 .subject(usuario.getId().toString())
                 .claim("nome", usuario.getNome())
                 .claim("email", usuario.getEmail())
-                .claim("municipio_id",
-                        (usuario.isAdmin() && usuario.getMunicipioId() == null) ? "N/A"
-                                : usuario.getMunicipioId().toString())
+                .claim("municipio_id", usuario.getMunicipioId().toString())
                 .groups(usuario.getRole().name())
                 .expiresIn(Duration.ofHours(6))
                 .sign();

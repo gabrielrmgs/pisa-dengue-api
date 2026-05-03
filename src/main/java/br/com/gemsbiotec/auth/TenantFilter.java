@@ -26,8 +26,7 @@ public class TenantFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext containerRequestContext) {
 
         if (jwt == null || jwt.getSubject() == null) {
-            System.out.println("JWT VAZIOOOO");
-            return;
+                return;
         }
 
         Long usuarioId = Long.valueOf(jwt.getSubject());

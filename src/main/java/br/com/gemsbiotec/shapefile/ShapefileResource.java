@@ -1,6 +1,7 @@
 package br.com.gemsbiotec.shapefile;
 
 import io.quarkus.security.identity.SecurityIdentity;
+import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
@@ -20,8 +21,8 @@ public class ShapefileResource {
 
     @GET
     @Path("/extrair")
-    @RolesAllowed("ADMIN")
-    @Produces(MediaType.TEXT_PLAIN) // Retornando apenas String (texto plano)
+    @PermitAll
+    @Produces(MediaType.TEXT_PLAIN)
     public Response acionarExtrator() {
         System.out.println("Usuário: " + identity.getPrincipal().getName());
         System.out.println("Roles: " + identity.getRoles());
