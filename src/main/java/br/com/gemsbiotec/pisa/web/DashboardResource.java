@@ -10,7 +10,6 @@ import br.com.gemsbiotec.integration.ibge.IbgeService;
 import br.com.gemsbiotec.integration.infodengue.AlertaSemanalDTO;
 import br.com.gemsbiotec.integration.infodengue.InfoDengueService;
 import br.com.gemsbiotec.mapa.MapaService;
-import jakarta.annotation.security.PermitAll;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
@@ -50,9 +49,14 @@ public class DashboardResource {
     @Operation(summary = "Casos históricos de dengue em determinado ano")
     public Response casosHistoricosDengue(@PathParam("anoConsulta") int anoConsulta) {
 
+        if (anoConsulta < 2000 || anoConsulta > 2100) {
+            return Response.status(Status.BAD_REQUEST)
+                    .entity("Ano de consulta inválido.")
+                    .build();
+        }
         List<AlertaSemanalDTO> alertas = infoDengueService.getAlertasPorAno(anoConsulta);
 
-        return Response.status(Status.ACCEPTED).entity(alertas).build();
+        return Response.ok(alertas).build();
     }
 
 }

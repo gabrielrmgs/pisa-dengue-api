@@ -1,5 +1,6 @@
 package br.com.gemsbiotec.integration.infodengue;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -36,6 +37,7 @@ public class AlertaSemanalDTO {
 
     /** Data de início da Semana Epidemiológica (formato AAAA-MM-DD) */
     @JsonProperty("data_iniSE")
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT, pattern = "s")
     public LocalDate dataInicioSE;
 
     /** Código numérico da SE no formato AAAAMM (ex: 202401) */
