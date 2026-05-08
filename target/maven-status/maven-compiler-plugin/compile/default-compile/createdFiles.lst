@@ -14,6 +14,7 @@ br\com\gemsbiotec\integration\ibge\MunicipioInfoDTO.class
 br\com\gemsbiotec\auth\LoginResponse.class
 br\com\gemsbiotec\auth\TenantFilter.class
 br\com\gemsbiotec\auth\LoginRequest.class
+br\com\gemsbiotec\mapa\MapaService.class
 br\com\gemsbiotec\repository\MunicipioRepository.class
 br\com\gemsbiotec\integration\ibge\IbgeService.class
 br\com\gemsbiotec\mapa\MapaResource.class
@@ -36,5 +37,6 @@ br\com\gemsbiotec\integration\ibge\BairroGeoJsonRepository.class
 br\com\gemsbiotec\auth\TokenResponse.class
 br\com\gemsbiotec\integration\ibge\IbgeService$FaixaEtariaDTO.class
 br\com\gemsbiotec\dominio\geo\Estado.class
+br\com\gemsbiotec\pisa\web\DashboardResource.class
 br\com\gemsbiotec\integration\ibge\MunicipioInfoDTO$UfDTO.class
 br\com\gemsbiotec\integration\ibge\ResultadoIndicadorDTO$LocalidadeDTO.class

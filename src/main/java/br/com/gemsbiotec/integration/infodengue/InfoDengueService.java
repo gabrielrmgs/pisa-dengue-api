@@ -6,6 +6,10 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
+import br.com.gemsbiotec.auth.TenantContext;
+import br.com.gemsbiotec.dominio.geo.Municipio;
+import br.com.gemsbiotec.repository.MunicipioRepository;
+
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.Collections;
@@ -32,6 +36,12 @@ public class InfoDengueService {
     @RestClient
     InfoDengueClient client;
 
+    @Inject
+    private TenantContext tenantContext;
+
+    @Inject
+    private MunicipioRepository municipioRepository;
+
     // ── consultas principais ──────────────────────────────────────────────────
 
     /**
@@ -41,7 +51,7 @@ public class InfoDengueService {
     @CacheResult(cacheName = "infodengue-ano")
     public List<AlertaSemanalDTO> getAlertasAnoCorrente(String geocode) {
         int ano = LocalDate.now().getYear();
-        return getAlertasPorAno(geocode, ano);
+        return getAlertasPorAno(ano);
     }
 
     /**
@@ -49,7 +59,11 @@ public class InfoDengueService {
      * Útil para o gráfico comparativo 2024 vs 2025 vs 2026.
      */
     @CacheResult(cacheName = "infodengue-historico")
-    public List<AlertaSemanalDTO> getAlertasPorAno(String geocode, int ano) {
+    public List<AlertaSemanalDTO> getAlertasPorAno(int ano) {
+
+        Municipio municipioUsuarioLogado = municipioRepository.findById(tenantContext.getMunicipioId());
+        String geocode = municipioUsuarioLogado.getCodigoIbge();
+
         try {
             List<AlertaSemanalDTO> resultado = client.getAlertasPorMunicipio(
                     geocode, DOENCA_DENGUE, FORMAT_JSON,
@@ -68,9 +82,9 @@ public class InfoDengueService {
      * Retorna alertas de múltiplos anos — usado pelo gráfico histórico do
      * dashboard.
      */
-    public List<List<AlertaSemanalDTO>> getHistoricoMultiAnos(String geocode, int... anos) {
+    public List<List<AlertaSemanalDTO>> getHistoricoMultiAnos(int... anos) {
         return java.util.Arrays.stream(anos)
-                .mapToObj(ano -> getAlertasPorAno(geocode, ano))
+                .mapToObj(ano -> getAlertasPorAno(ano))
                 .toList();
     }
 

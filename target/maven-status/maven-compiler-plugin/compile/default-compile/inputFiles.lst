@@ -25,6 +25,8 @@ C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\Caso
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\dto\Feature.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\dto\FeatureCollection.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\MapaResource.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\MapaService.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\web\DashboardResource.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\BairroRepository.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\CasoRepository.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\EstadoRepository.java
