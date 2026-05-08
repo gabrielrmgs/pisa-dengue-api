@@ -4,30 +4,32 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 /**
  * Representa um registro semanal retornado pela API do InfoDengue.
  *
  * Campos mapeados do JSON de resposta:
  * {
- *   "data_iniSE": "2024-01-07",
- *   "SE": 202401,
- *   "casos_est": 3.5,
- *   "casos_est_min": 1.0,
- *   "casos_est_max": 8.0,
- *   "casos": 2,
- *   "municipio_geocodigo": 2201903,
- *   "p_rt1": 0.87,
- *   "p_inc100k": 5.2,
- *   "Rt": 1.12,
- *   "versao_modelo": "2024-01-14",
- *   "Localidade_id": 0,
- *   "nivel": 2,
- *   "id": 123456,
- *   "versao_modelo_id": 7,
- *   "municipio_nome": "Bom Jesus",
- *   "nivel_inc": 3
+ * "data_iniSE": "2024-01-07",
+ * "SE": 202401,
+ * "casos_est": 3.5,
+ * "casos_est_min": 1.0,
+ * "casos_est_max": 8.0,
+ * "casos": 2,
+ * "municipio_geocodigo": 2201903,
+ * "p_rt1": 0.87,
+ * "p_inc100k": 5.2,
+ * "Rt": 1.12,
+ * "versao_modelo": "2024-01-14",
+ * "Localidade_id": 0,
+ * "nivel": 2,
+ * "id": 123456,
+ * "versao_modelo_id": 7,
+ * "municipio_nome": "Bom Jesus",
+ * "nivel_inc": 3
  * }
  *
  * nivel: 1=verde, 2=amarelo, 3=laranja, 4=vermelho
@@ -36,8 +38,6 @@ import java.time.LocalDate;
 public class AlertaSemanalDTO {
 
     /** Data de início da Semana Epidemiológica (formato AAAA-MM-DD) */
-    @JsonProperty("data_iniSE")
-    @JsonFormat(shape = JsonFormat.Shape.NUMBER_INT, pattern = "s")
     public LocalDate dataInicioSE;
 
     /** Código numérico da SE no formato AAAAMM (ex: 202401) */
@@ -78,7 +78,7 @@ public class AlertaSemanalDTO {
 
     /**
      * Nível de alerta epidemiológico:
-     * 1 = verde  (baixo risco)
+     * 1 = verde (baixo risco)
      * 2 = amarelo (risco moderado)
      * 3 = laranja (alto risco)
      * 4 = vermelho (muito alto risco)
@@ -94,26 +94,36 @@ public class AlertaSemanalDTO {
     @JsonProperty("nivel_inc")
     public Integer nivelIncidencia;
 
+    @JsonProperty("data_iniSE")
+    public void setDataInicioSE(long timestamp) {
+        this.dataInicioSE = Instant.ofEpochMilli(timestamp)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate();
+    }
+
+    public LocalDate getDataInicioSE() {
+        return this.dataInicioSE;
+    }
+
     // ── helpers ─────────────────────────────────────────────────────────────
 
     public String nivelComoTexto() {
         return switch (nivel != null ? nivel : 0) {
-            case 1  -> "Baixo";
-            case 2  -> "Moderado";
-            case 3  -> "Alto";
-            case 4  -> "Muito Alto";
+            case 1 -> "Baixo";
+            case 2 -> "Moderado";
+            case 3 -> "Alto";
+            case 4 -> "Muito Alto";
             default -> "Indeterminado";
         };
     }
 
     public String nivelComoCor() {
         return switch (nivel != null ? nivel : 0) {
-            case 1  -> "#22c55e";
-            case 2  -> "#eab308";
-            case 3  -> "#f97316";
-            case 4  -> "#ef4444";
+            case 1 -> "#22c55e";
+            case 2 -> "#eab308";
+            case 3 -> "#f97316";
+            case 4 -> "#ef4444";
             default -> "#6b7280";
         };
     }
 }
-
