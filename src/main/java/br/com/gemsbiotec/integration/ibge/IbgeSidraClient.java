@@ -10,64 +10,44 @@ import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 import java.util.List;
 
 /**
- * Client para a API SIDRA do IBGE — Censo Demográfico 2022.
+ * Client para a API SIDRA do IBGE - Censo Demografico 2022.
  *
- * Base URL: https://apisidra.ibge.gov.br
- * Configurada em: quarkus.rest-client.ibge-sidra.url
- *
- * Tabelas usadas no MVP:
- *   9514 — Pessoas por sexo e grupo de idade (Censo 2022)
- *   9515 — Domicílios por situação (urbano/rural)
- *
- * Formato de URL do SIDRA:
- *   /values/t/{tabela}/n6/{geocodigo}/v/{variavel}/p/2022/c2/{classificacao_sexo}/c287/{classificacao_idade}
- *
- * Onde:
- *   n6  = nível geográfico "município"
- *   v   = variável (93 = pessoas)
- *   c2  = classificação sexo (4=masculino, 5=feminino, 6=total)
- *   c287= classificação por grupos de idade
+ * Tabela 9514: populacao residente por sexo, idade e forma de declaracao da idade.
+ * Base URL configurada em quarkus.rest-client.ibge-sidra.url.
  */
 @RegisterRestClient(configKey = "ibge-sidra")
 @Produces(MediaType.APPLICATION_JSON)
 public interface IbgeSidraClient {
 
     /**
-     * Retorna população total, masculina e feminina do município.
+     * Retorna populacao total, masculina e feminina do municipio.
      *
-     * URL gerada:
-     * /values/t/9514/n6/{geocodigo}/v/93/p/2022/c2/4,5,6/c287/allxt
-     *
-     * @param geocodigo Código IBGE de 7 dígitos sem traço
+     * URL:
+     * /values/t/9514/n6/{geocode}/v/allxp/p/all/c2/all/c287/100362/c286/113635
      */
     @GET
-    @Path("/values/t/9514/n6/{geocodigo}/v/93/p/2022/c2/4,5,6/c287/allxt")
+    @Path("/values/t/9514/n6/{geocode}/v/allxp/p/all/c2/all/c287/100362/c286/113635")
     List<SidraResultadoDTO> getPopulacaoPorSexo(
-            @PathParam("geocodigo") String geocodigo
+            @PathParam("geocode") String geocodigo
     );
 
     /**
-     * Retorna população por faixa etária detalhada (17 grupos).
-     * Usado no gráfico "População por Faixa Etária" do dashboard.
-     *
-     * URL gerada:
-     * /values/t/9514/n6/{geocodigo}/v/93/p/2022/c2/6/c287/allxt
+     * Retorna populacao por grupos etarios quinquenais, apenas para sexo total.
      */
     @GET
-    @Path("/values/t/9514/n6/{geocodigo}/v/93/p/2022/c2/6/c287/allxt")
+    @Path("/values/t/9514/n6/{geocode}/v/93/p/2022/c2/6794/c287/100362,93070,93084,93085,93086,93087,93088,93089,93090,93091,93092,93093,93094,93095,93096,93097,93098,49108,49109,60040,60041,6653/c286/113635")
     List<SidraResultadoDTO> getPopulacaoPorFaixaEtaria(
-            @PathParam("geocodigo") String geocodigo
+            @PathParam("geocode") String geocodigo
     );
 
     /**
-     * Variante com parâmetros dinâmicos — útil para consultas ad-hoc
-     * ou futuras expansões sem criar um método por combinação.
+     * Variante com parametros dinamicos para futuras consultas SIDRA.
      *
-     * Exemplo de path completo:
-     * /values/t/9514/n6/2201903/v/93/p/2022/c2/4,5,6/c287/allxt
+     * Exemplo de path:
+     * t/9514/n6/2201903/v/93/p/2022/c2/6794,4,5/c287/100362/c286/113635
      */
     @GET
-    @Path("/values/{path}")
+    @Path("/values/{path:.+}")
     List<SidraResultadoDTO> consultaGenerica(
             @PathParam("path") String path
     );

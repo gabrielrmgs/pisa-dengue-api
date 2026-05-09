@@ -9,62 +9,68 @@ import java.util.Map;
 /**
  * DTO para resultados da API SIDRA do IBGE.
  *
- * O SIDRA retorna um array onde o primeiro elemento é o cabeçalho
- * e os demais são as linhas de dados. Cada elemento é um Map<String, String>.
- *
- * Exemplo de linha de dados:
- * {
- *   "NC":  "Município",
- *   "NN":  "Bom Jesus",
- *   "MC":  "N6",
- *   "MN":  "Município",
- *   "V":   "23114",
- *   "D1C": "2201903",
- *   "D1N": "Bom Jesus",
- *   "D2C": "2022",
- *   "D2N": "2022",
- *   "D3C": "6",
- *   "D3N": "Total",
- *   "D4C": "100362",
- *   "D4N": "Total"
- * }
- *
- * Campos relevantes:
- *   V    = valor (população, domicílios, etc.)
- *   D3N  = sexo (Total / Masculino / Feminino)
- *   D4N  = faixa etária (Total, 0 a 4 anos, 5 a 9 anos, ...)
+ * Na tabela 9514, com a URL usada pelo projeto, a ordem dos descritores e:
+ * D1 = Municipio
+ * D2 = Variavel
+ * D3 = Ano
+ * D4 = Sexo
+ * D5 = Idade
+ * D6 = Forma de declaracao da idade
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SidraResultadoDTO {
 
-    /** Valor da variável consultada (ex: número de pessoas) */
+    private static final String SEXO_TOTAL = "6794";
+    private static final String SEXO_HOMENS = "4";
+    private static final String SEXO_MULHERES = "5";
+    private static final String IDADE_TOTAL = "100362";
+    private static final String FORMA_TOTAL = "113635";
+
     @JsonProperty("V")
     public String valor;
 
-    /** Nome da localidade (município) */
     @JsonProperty("D1N")
     public String municipioNome;
 
-    /** Código da localidade */
     @JsonProperty("D1C")
     public String municipioCodigo;
 
-    /** Período (ano) */
     @JsonProperty("D2N")
+    public String variavel;
+
+    @JsonProperty("D2C")
+    public String variavelCodigo;
+
+    @JsonProperty("D3N")
     public String periodo;
 
-    /** Classificação de sexo: "Total", "Masculino", "Feminino" */
-    @JsonProperty("D3N")
+    @JsonProperty("D3C")
+    public String periodoCodigo;
+
+    @JsonProperty("D4N")
     public String sexo;
 
-    /** Faixa etária: "Total", "0 a 4 anos", "5 a 9 anos", etc. */
-    @JsonProperty("D4N")
+    @JsonProperty("D4C")
+    public String sexoCodigo;
+
+    @JsonProperty("D5N")
     public String faixaEtaria;
 
-    // ── helpers ──────────────────────────────────────────────────────────────
+    @JsonProperty("D5C")
+    public String faixaEtariaCodigo;
 
-    /** Converte o valor string para Long, retornando 0 em caso de erro. */
+    @JsonProperty("D6N")
+    public String formaDeclaracaoIdade;
+
+    @JsonProperty("D6C")
+    public String formaDeclaracaoIdadeCodigo;
+
     public long getValorLong() {
+        if (valor == null || "-".equals(valor) || "X".equalsIgnoreCase(valor)
+                || "..".equals(valor) || "...".equals(valor) || "Valor".equalsIgnoreCase(valor)) {
+            return 0L;
+        }
+
         try {
             return Long.parseLong(valor.replace(".", "").trim());
         } catch (NumberFormatException | NullPointerException e) {
@@ -72,13 +78,36 @@ public class SidraResultadoDTO {
         }
     }
 
-    /** Retorna true se esta linha representa o total geral (sem corte por sexo/idade). */
     public boolean isTotalGeral() {
-        return "Total".equalsIgnoreCase(sexo) && "Total".equalsIgnoreCase(faixaEtaria);
+        return isSexoTotal() && isIdadeTotal() && isFormaDeclaracaoTotal();
+    }
+
+    public boolean isSexoTotal() {
+        return SEXO_TOTAL.equals(sexoCodigo) || "Total".equalsIgnoreCase(sexo);
+    }
+
+    public boolean isSexoMasculino() {
+        return SEXO_HOMENS.equals(sexoCodigo)
+                || "Homens".equalsIgnoreCase(sexo)
+                || "Masculino".equalsIgnoreCase(sexo);
+    }
+
+    public boolean isSexoFeminino() {
+        return SEXO_MULHERES.equals(sexoCodigo)
+                || "Mulheres".equalsIgnoreCase(sexo)
+                || "Feminino".equalsIgnoreCase(sexo);
+    }
+
+    public boolean isIdadeTotal() {
+        return IDADE_TOTAL.equals(faixaEtariaCodigo) || "Total".equalsIgnoreCase(faixaEtaria);
+    }
+
+    public boolean isFormaDeclaracaoTotal() {
+        return FORMA_TOTAL.equals(formaDeclaracaoIdadeCodigo)
+                || "Total".equalsIgnoreCase(formaDeclaracaoIdade)
+                || formaDeclaracaoIdade == null;
     }
 }
-
-// ── DTO para /api/v1/pesquisas/indicadores ────────────────────────────────────
 
 class ResultadoIndicadorDTO {
 
