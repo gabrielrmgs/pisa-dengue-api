@@ -7,6 +7,8 @@ public record DashboardResumoResponse(
             String estadoNome,
             String estadoSigla,
             long populacao,
+            long populacaoMasculina,
+            long populacaoFeminina,
             int totalCasosAno,
             int totalCasosMes,
             double incidenciaAcumulada,

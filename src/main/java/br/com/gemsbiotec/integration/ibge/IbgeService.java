@@ -94,6 +94,24 @@ public class IbgeService {
         }
     }
 
+    @CacheResult(cacheName = "ibge-faixa-etaria-sexo")
+    public List<FaixaEtariaSexoDTO> getPopulacaoPorFaixaEtariaESexo(String geocodigo) {
+        try {
+            List<SidraResultadoDTO> dados = sidraClient.getPopulacaoPorFaixaEtaria(geocodigo);
+            return dados.stream()
+                    .filter(SidraResultadoDTO::isFormaDeclaracaoTotal)
+                    .filter(d -> !d.isIdadeTotal())
+                    .map(d -> new FaixaEtariaSexoDTO(
+                            d.faixaEtaria,
+                            d.isSexoMasculino() ? "MASCULINO" : d.isSexoFeminino() ? "FEMININO" : "TOTAL",
+                            d.getValorLong()))
+                    .toList();
+        } catch (Exception e) {
+            LOG.errorf("Falha ao buscar faixa etaria por sexo IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
     public record PopulacaoPorSexoDTO(long total, long masculino, long feminino) {
         public double percMasculino() {
             return total == 0 ? 0 : (masculino * 100.0 / total);
@@ -105,5 +123,8 @@ public class IbgeService {
     }
 
     public record FaixaEtariaDTO(String faixa, long populacao) {
+    }
+
+    public record FaixaEtariaSexoDTO(String faixa, String sexo, long populacao) {
     }
 }

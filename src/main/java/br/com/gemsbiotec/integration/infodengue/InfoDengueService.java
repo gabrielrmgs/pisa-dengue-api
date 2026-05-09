@@ -8,14 +8,22 @@ import org.jboss.logging.Logger;
 
 import br.com.gemsbiotec.auth.TenantContext;
 import br.com.gemsbiotec.dominio.geo.Municipio;
+import br.com.gemsbiotec.pisa.dto.DengueComparativoAnualResponse;
+import br.com.gemsbiotec.pisa.dto.DengueComparativoAnualResponse.DengueAnoValor;
+import br.com.gemsbiotec.pisa.dto.DengueComparativoAnualResponse.DengueSemanaComparativo;
 import br.com.gemsbiotec.repository.MunicipioRepository;
 
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Serviço de negócio para dados do InfoDengue.
@@ -88,6 +96,39 @@ public class InfoDengueService {
                 .toList();
     }
 
+    public DengueComparativoAnualResponse getComparativoUltimosTresAnos() {
+        int anoAtual = LocalDate.now().getYear();
+        List<Integer> anos = List.of(anoAtual, anoAtual - 1, anoAtual - 2);
+
+        Map<Integer, Map<Integer, AlertaSemanalDTO>> alertasPorAnoSemana = new LinkedHashMap<>();
+        for (Integer ano : anos) {
+            Map<Integer, AlertaSemanalDTO> porSemana = getAlertasPorAno(ano).stream()
+                    .filter(alerta -> alerta.semanaEpidemiologica != null)
+                    .collect(Collectors.toMap(
+                            alerta -> semanaDoAno(alerta.semanaEpidemiologica),
+                            Function.identity(),
+                            (atual, substituto) -> substituto,
+                            LinkedHashMap::new));
+            alertasPorAnoSemana.put(ano, porSemana);
+        }
+
+        List<DengueSemanaComparativo> semanas = new ArrayList<>();
+        for (int semana = 1; semana <= 53; semana++) {
+            List<DengueAnoValor> valores = new ArrayList<>();
+            for (Integer ano : anos) {
+                AlertaSemanalDTO alerta = alertasPorAnoSemana.getOrDefault(ano, Map.of()).get(semana);
+                valores.add(new DengueAnoValor(
+                        ano,
+                        alerta != null && alerta.casosNotificados != null ? alerta.casosNotificados : 0,
+                        alerta != null && alerta.casosEstimados != null ? alerta.casosEstimados : 0.0,
+                        alerta != null && alerta.incidenciaPor100k != null ? alerta.incidenciaPor100k : 0.0));
+            }
+            semanas.add(new DengueSemanaComparativo(semana, valores));
+        }
+
+        return new DengueComparativoAnualResponse(anos, semanas);
+    }
+
     // ── agregações para os cards do dashboard ─────────────────────────────────
 
     /**
@@ -140,5 +181,9 @@ public class InfoDengueService {
     public int getSemanaEpidemiologicaAtual() {
         return LocalDate.now()
                 .get(WeekFields.of(Locale.forLanguageTag("pt-BR")).weekOfWeekBasedYear());
+    }
+
+    private int semanaDoAno(Integer semanaEpidemiologica) {
+        return Math.floorMod(semanaEpidemiologica, 100);
     }
 }

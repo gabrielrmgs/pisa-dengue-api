@@ -13,6 +13,7 @@ import br.com.gemsbiotec.integration.ibge.IbgeService;
 import br.com.gemsbiotec.integration.infodengue.AlertaSemanalDTO;
 import br.com.gemsbiotec.integration.infodengue.InfoDengueService;
 import br.com.gemsbiotec.mapa.MapaService;
+import br.com.gemsbiotec.pisa.DashboardDemografiaService;
 import br.com.gemsbiotec.pisa.dto.DashboardResumoResponse;
 import br.com.gemsbiotec.repository.MunicipioRepository;
 import jakarta.annotation.security.RolesAllowed;
@@ -32,6 +33,7 @@ public class DashboardResource {
 	private final IbgeService ibgeService;
 	private final InfoDengueService infoDengueService;
 	private final MapaService mapaService;
+	private final DashboardDemografiaService dashboardDemografiaService;
 	private final MunicipioRepository municipioRepository;
 	private final TenantContext tenantContext;
 
@@ -39,11 +41,13 @@ public class DashboardResource {
 			IbgeService ibgeService,
 			InfoDengueService infoDengueService,
 			MapaService mapaService,
+			DashboardDemografiaService dashboardDemografiaService,
 			MunicipioRepository municipioRepository,
 			TenantContext tenantContext) {
 		this.ibgeService = ibgeService;
 		this.infoDengueService = infoDengueService;
 		this.mapaService = mapaService;
+		this.dashboardDemografiaService = dashboardDemografiaService;
 		this.municipioRepository = municipioRepository;
 		this.tenantContext = tenantContext;
 	}
@@ -80,6 +84,38 @@ public class DashboardResource {
 		List<AlertaSemanalDTO> alertas = infoDengueService.getAlertasPorAno(anoConsulta);
 
 		return Response.ok(alertas).build();
+	}
+
+	@GET
+	@Path("/dengue/comparativo")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "Comparativo semanal de dengue dos ultimos tres anos")
+	public Response comparativoDengueUltimosTresAnos() {
+		return Response.ok(infoDengueService.getComparativoUltimosTresAnos()).build();
+	}
+
+	@GET
+	@Path("/demografia/faixa-etaria")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "Populacao do municipio por faixa etaria para graficos")
+	public Response faixaEtariaMunicipio() {
+		return Response.ok(dashboardDemografiaService.faixaEtariaMunicipio()).build();
+	}
+
+	@GET
+	@Path("/demografia/bairros/{bairroId}/faixa-etaria")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "Populacao do bairro por faixa etaria para graficos")
+	public Response faixaEtariaBairro(@PathParam("bairroId") Long bairroId) {
+		return Response.ok(dashboardDemografiaService.faixaEtariaBairro(bairroId)).build();
+	}
+
+	@GET
+	@Path("/demografia/bairros/{bairroId}/sexo")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "Populacao do bairro por sexo para graficos")
+	public Response sexoBairro(@PathParam("bairroId") Long bairroId) {
+		return Response.ok(dashboardDemografiaService.sexoBairro(bairroId)).build();
 	}
 
 	@GET
@@ -125,6 +161,8 @@ public class DashboardResource {
 				? municipio.getPopulacao()
 				: ibgeService.getPopulacaoTotal(geocode);
 
+		IbgeService.PopulacaoPorSexoDTO populacaoPorSexo = ibgeService.getPopulacaoPorSexo(geocode);
+
 		DashboardResumoResponse resumo = new DashboardResumoResponse(
 				municipio.getId(),
 				municipio.getNome(),
@@ -132,6 +170,8 @@ public class DashboardResource {
 				municipio.getEstado() != null ? municipio.getEstado().getNome() : null,
 				municipio.getEstado() != null ? municipio.getEstado().getSigla() : null,
 				populacao,
+				populacaoPorSexo.masculino(),
+				populacaoPorSexo.feminino(),
 				totalCasosAno,
 				totalCasosMes,
 				incidenciaAcumulada,

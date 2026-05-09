@@ -42,6 +42,10 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
         return find("codigo", codigo).firstResultOptional();
     }
 
+    public Optional<Bairro> findByIdETenant(Long id, Long municipioId) {
+        return find("id = ?1 AND municipio.id = ?2", id, municipioId).firstResultOptional();
+    }
+
     public List<Bairro> listByMunicipio(Long municipioId) {
         return list("municipio.id = ?1 ORDER BY nome", municipioId);
     }

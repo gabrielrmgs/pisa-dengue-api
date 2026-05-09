@@ -32,6 +32,7 @@ public class MapaService {
             feature.geometry = b.getGeometria();
 
             Map<String, Object> props = new HashMap<>();
+            props.put("bairro_id", b.getId());
             props.put("codigo_ibge_bairro", b.getCodigo());
             props.put("nome_bairro", b.getNome());
             props.put("nome_municipio", b.getMunicipio().getNome());
@@ -58,6 +59,7 @@ public class MapaService {
             feature.geometry = b.getGeometria();
 
             Map<String, Object> props = new HashMap<>();
+            props.put("bairro_id", b.getId());
             props.put("codigo_ibge_bairro", b.getCodigo());
             props.put("nome_bairro", b.getNome());
             props.put("nome_municipio", b.getMunicipio().getNome());

@@ -26,7 +26,11 @@ C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\dto\
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\dto\FeatureCollection.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\MapaResource.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\mapa\MapaService.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\DashboardDemografiaService.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\dto\DashboardResumoResponse.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\dto\DengueComparativoAnualResponse.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\dto\FaixaEtariaDashboardResponse.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\dto\PopulacaoPorSexoDashboardResponse.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\pisa\web\DashboardResource.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\BairroRepository.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\CasoRepository.java
@@ -39,3 +43,7 @@ C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\BairroDemografiaCsvService.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\ShapefileResource.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\ShapefileService.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\usuario\CriarUsuarioRequest.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\usuario\UsuarioResource.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\usuario\UsuarioResponse.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\usuario\UsuarioService.java
