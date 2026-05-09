@@ -58,6 +58,15 @@ public class DashboardResource {
 	}
 
 	@GET
+	@Path("/geojson/bairros-demografia")
+	@Produces("application/geo+json")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "GeoJSON com poligonos e dados demograficos dos bairros")
+	public Response geoJsonMunicipioComDemografia() {
+		return mapaService.geoJsonMunicipioComDemografia();
+	}
+
+	@GET
 	@Path("/dengue/ano/{anoConsulta}")
 	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
 	@Operation(summary = "Casos históricos de dengue em determinado ano")
