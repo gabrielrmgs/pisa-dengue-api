@@ -35,7 +35,11 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
     }
 
     public Optional<Bairro> findByCdBairro(String cdBairro) {
-        return find("cdBairro", cdBairro).firstResultOptional();
+        return findByCodigo(cdBairro);
+    }
+
+    public Optional<Bairro> findByCodigo(String codigo) {
+        return find("codigo", codigo).firstResultOptional();
     }
 
     public List<Bairro> listByMunicipio(Long municipioId) {
@@ -43,7 +47,11 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
     }
 
     public boolean existsByCdBairro(String cdBairro) {
-        return count("cdBairro", cdBairro) > 0;
+        return existsByCodigo(cdBairro);
+    }
+
+    public boolean existsByCodigo(String codigo) {
+        return count("codigo", codigo) > 0;
     }
 
     // ── GeoJSON para o Leaflet ────────────────────────────────────────────────

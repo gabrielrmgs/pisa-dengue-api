@@ -35,5 +35,7 @@ C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repositor
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\MunicipioRepository.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\UnidadeSaudeRepository.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\repository\UsuarioRepository.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\BairroDemografiaCsvResource.java
+C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\BairroDemografiaCsvService.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\ShapefileResource.java
 C:\Users\Gabri\Desktop\pisa-dengue-api\src\main\java\br\com\gemsbiotec\shapefile\ShapefileService.java

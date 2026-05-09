@@ -7,7 +7,9 @@ br\com\gemsbiotec\config\JacksonConfig.class
 br\com\gemsbiotec\integration\infodengue\InfoDengueService.class
 br\com\gemsbiotec\integration\ibge\SidraResultadoDTO.class
 br\com\gemsbiotec\integration\ibge\MunicipioInfoDTO$MicroRegiaoDTO.class
+br\com\gemsbiotec\shapefile\BairroDemografiaCsvResource.class
 br\com\gemsbiotec\mapa\dto\Feature.class
+br\com\gemsbiotec\shapefile\BairroDemografiaCsvService$ResultadoImportacao.class
 br\com\gemsbiotec\integration\ibge\IbgeService$PopulacaoPorSexoDTO.class
 br\com\gemsbiotec\integration\ibge\IbgeSidraClient.class
 br\com\gemsbiotec\dominio\geo\Bairro.class
@@ -35,6 +37,7 @@ br\com\gemsbiotec\integration\ibge\MunicipioInfoDTO$MesoRegiaoDTO.class
 br\com\gemsbiotec\auth\TenantContext.class
 br\com\gemsbiotec\shapefile\ShapefileService.class
 br\com\gemsbiotec\integration\ibge\BairroGeoJsonRepository.class
+br\com\gemsbiotec\shapefile\BairroDemografiaCsvService.class
 br\com\gemsbiotec\auth\TokenResponse.class
 br\com\gemsbiotec\integration\ibge\IbgeService$FaixaEtariaDTO.class
 br\com\gemsbiotec\dominio\geo\Estado.class
