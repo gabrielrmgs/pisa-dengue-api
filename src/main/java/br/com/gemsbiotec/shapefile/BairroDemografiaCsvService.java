@@ -24,7 +24,7 @@ import java.util.Optional;
 @ApplicationScoped
 public class BairroDemografiaCsvService {
 
-    private static final String CSV_PADRAO_RESOURCES = "csv/Agregados_por_bairros_demografia_BR.csv";
+    private static final String CSV_PADRAO_RESOURCES = "csv/Agregados_por_bairros_demografia_BR.csv.csv";
     private static final Path CSV_PADRAO_DESENVOLVIMENTO = Path.of(
             "docs-codex/contexto/extrator-bairros/Agregados_por_bairros_demografia_BR_Apenas_Municipio_Uniao.csv");
 
