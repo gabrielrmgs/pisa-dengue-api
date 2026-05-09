@@ -3,6 +3,7 @@ package br.com.gemsbiotec.auth;
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
@@ -33,5 +34,12 @@ public class AuthResource {
     @PermitAll
     public Response criarAdmin(LoginRequest request) {
         return Response.ok(authService.criarUsuario(request)).build();
+    }
+
+    @GET
+    @Path("/testeAuth")
+    @PermitAll
+    public String testeAPI() {
+        return "API online!!!";
     }
 }

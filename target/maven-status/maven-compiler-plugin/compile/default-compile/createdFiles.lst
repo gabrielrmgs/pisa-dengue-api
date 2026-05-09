@@ -1,4 +1,5 @@
 br\com\gemsbiotec\integration\ibge\ResultadoIndicadorDTO.class
+br\com\gemsbiotec\pisa\dto\DashboardResumoResponse.class
 br\com\gemsbiotec\mapa\dto\FeatureCollection.class
 br\com\gemsbiotec\auth\AuthService.class
 br\com\gemsbiotec\auth\AuthResource.class
