@@ -1,13 +1,27 @@
-FROM eclipse-temurin:25-jdk
+FROM eclipse-temurin:25-jdk AS build
 
-# Diretório da aplicação
+WORKDIR /workspace
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
+
+COPY src/ src/
+
+RUN ./mvnw package -DskipTests
+
+
+FROM eclipse-temurin:25-jre
+
 WORKDIR /app
 
-# Copia o build do Quarkus
-COPY target/quarkus-app/ /app/
+COPY --from=build /workspace/target/quarkus-app/ /app/
 
-# Expõe a porta da API
 EXPOSE 8081
 
-# Comando de inicialização
 CMD ["java", "-jar", "quarkus-run.jar"]

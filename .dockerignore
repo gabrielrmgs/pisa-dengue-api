@@ -1,17 +1,19 @@
-# Tudo ignorado por padrão, só entra o necessário
-*
+.git/
+.github/
+.idea/
+.vscode/
 
-# Build Quarkus — o que realmente precisa entrar na imagem
-!target/*-runner
-!target/*-runner.jar
-!target/lib/
-!target/quarkus-app/
+target/
+docker/
+docs-codex/
 
-# Nunca entrar na imagem
 .env
-.git
-.gitignore
-.idea
-.vscode
-*.md
+.env.*
+!.env.example
+secrets/
+
+README.md
 docker-compose*.yml
+
+src/main/resources/certs/privateKey.pem
+src/main/resources/META-INF/resources/privateKey.pem

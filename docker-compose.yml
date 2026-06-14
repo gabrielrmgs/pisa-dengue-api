@@ -33,7 +33,7 @@ services:
       QUARKUS_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       JWT_PRIVATE_KEY_PATH: ${JWT_PRIVATE_KEY_PATH}
     volumes:
-      - /opt/pisa-dengue-api/secrets:/app/secrets:ro
+      - ./secrets:/app/secrets:ro
     ports:
       - "8081:8081"
     networks:
