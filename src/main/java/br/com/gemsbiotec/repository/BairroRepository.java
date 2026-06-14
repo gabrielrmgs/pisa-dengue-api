@@ -10,6 +10,7 @@ import java.util.Optional;
 
 import br.com.gemsbiotec.auth.TenantContext;
 import br.com.gemsbiotec.dominio.geo.Bairro;
+import org.locationtech.jts.geom.Envelope;
 
 /**
  * Repository para Bairro.
@@ -48,6 +49,22 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
 
     public List<Bairro> listByMunicipio(Long municipioId) {
         return list("municipio.id = ?1 ORDER BY nome", municipioId);
+    }
+
+    public Optional<Coordenada> getCentroideMunicipio(Long municipioId) {
+        Envelope envelope = new Envelope();
+        listByMunicipio(municipioId).stream()
+                .map(Bairro::getGeometria)
+                .filter(geometria -> geometria != null && !geometria.isEmpty())
+                .forEach(geometria -> envelope.expandToInclude(geometria.getEnvelopeInternal()));
+
+        if (envelope.isNull()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(new Coordenada(
+                (envelope.getMinY() + envelope.getMaxY()) / 2.0,
+                (envelope.getMinX() + envelope.getMaxX()) / 2.0));
     }
 
     public boolean existsByCdBairro(String cdBairro) {
@@ -220,5 +237,8 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
                 .setMaxResults(1)
                 .getResultStream()
                 .findFirst();
+    }
+
+    public record Coordenada(double latitude, double longitude) {
     }
 }

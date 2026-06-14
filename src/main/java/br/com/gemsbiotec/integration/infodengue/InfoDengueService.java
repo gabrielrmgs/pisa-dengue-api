@@ -59,19 +59,23 @@ public class InfoDengueService {
     @CacheResult(cacheName = "infodengue-ano")
     public List<AlertaSemanalDTO> getAlertasAnoCorrente(String geocode) {
         int ano = LocalDate.now().getYear();
-        return getAlertasPorAno(ano);
+        return getAlertasPorAno(geocode, ano);
     }
 
     /**
      * Retorna alertas de um ano específico (SE 1 a 53).
      * Útil para o gráfico comparativo 2024 vs 2025 vs 2026.
      */
-    @CacheResult(cacheName = "infodengue-historico")
     public List<AlertaSemanalDTO> getAlertasPorAno(int ano) {
 
         Municipio municipioUsuarioLogado = municipioRepository.findById(tenantContext.getMunicipioId());
         String geocode = municipioUsuarioLogado.getCodigoIbge();
 
+        return getAlertasPorAno(geocode, ano);
+    }
+
+    @CacheResult(cacheName = "infodengue-historico")
+    public List<AlertaSemanalDTO> getAlertasPorAno(String geocode, int ano) {
         try {
             List<AlertaSemanalDTO> resultado = client.getAlertasPorMunicipio(
                     geocode, DOENCA_DENGUE, FORMAT_JSON,
@@ -91,18 +95,20 @@ public class InfoDengueService {
      * dashboard.
      */
     public List<List<AlertaSemanalDTO>> getHistoricoMultiAnos(int... anos) {
+        String geocode = municipioRepository.findById(tenantContext.getMunicipioId()).getCodigoIbge();
         return java.util.Arrays.stream(anos)
-                .mapToObj(ano -> getAlertasPorAno(ano))
+                .mapToObj(ano -> getAlertasPorAno(geocode, ano))
                 .toList();
     }
 
     public DengueComparativoAnualResponse getComparativoUltimosTresAnos() {
         int anoAtual = LocalDate.now().getYear();
         List<Integer> anos = List.of(anoAtual, anoAtual - 1, anoAtual - 2);
+        String geocode = municipioRepository.findById(tenantContext.getMunicipioId()).getCodigoIbge();
 
         Map<Integer, Map<Integer, AlertaSemanalDTO>> alertasPorAnoSemana = new LinkedHashMap<>();
         for (Integer ano : anos) {
-            Map<Integer, AlertaSemanalDTO> porSemana = getAlertasPorAno(ano).stream()
+            Map<Integer, AlertaSemanalDTO> porSemana = getAlertasPorAno(geocode, ano).stream()
                     .filter(alerta -> alerta.semanaEpidemiologica != null)
                     .collect(Collectors.toMap(
                             alerta -> semanaDoAno(alerta.semanaEpidemiologica),

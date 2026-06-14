@@ -13,14 +13,19 @@ import br.com.gemsbiotec.integration.ibge.IbgeService;
 import br.com.gemsbiotec.integration.infodengue.AlertaSemanalDTO;
 import br.com.gemsbiotec.integration.infodengue.InfoDengueService;
 import br.com.gemsbiotec.mapa.MapaService;
+import br.com.gemsbiotec.pisa.ClimaCasosCorrelacaoService;
 import br.com.gemsbiotec.pisa.DashboardDemografiaService;
 import br.com.gemsbiotec.pisa.dto.DashboardResumoResponse;
 import br.com.gemsbiotec.repository.MunicipioRepository;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.ws.rs.DefaultValue;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.NotAuthorizedException;
+import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status;
 
@@ -34,6 +39,7 @@ public class DashboardResource {
 	private final InfoDengueService infoDengueService;
 	private final MapaService mapaService;
 	private final DashboardDemografiaService dashboardDemografiaService;
+	private final ClimaCasosCorrelacaoService climaCasosCorrelacaoService;
 	private final MunicipioRepository municipioRepository;
 	private final TenantContext tenantContext;
 
@@ -42,12 +48,14 @@ public class DashboardResource {
 			InfoDengueService infoDengueService,
 			MapaService mapaService,
 			DashboardDemografiaService dashboardDemografiaService,
+			ClimaCasosCorrelacaoService climaCasosCorrelacaoService,
 			MunicipioRepository municipioRepository,
 			TenantContext tenantContext) {
 		this.ibgeService = ibgeService;
 		this.infoDengueService = infoDengueService;
 		this.mapaService = mapaService;
 		this.dashboardDemografiaService = dashboardDemografiaService;
+		this.climaCasosCorrelacaoService = climaCasosCorrelacaoService;
 		this.municipioRepository = municipioRepository;
 		this.tenantContext = tenantContext;
 	}
@@ -81,7 +89,22 @@ public class DashboardResource {
 					.entity("Ano de consulta inválido.")
 					.build();
 		}
-		List<AlertaSemanalDTO> alertas = infoDengueService.getAlertasPorAno(anoConsulta);
+		Long municipioId = tenantContext.getMunicipioId();
+		if (municipioId == null) {
+			return Response.status(Status.UNAUTHORIZED)
+					.entity("Municipio nao encontrado no token.")
+					.build();
+		}
+
+		Optional<Municipio> municipioOptional = municipioRepository.findAtivoById(municipioId);
+		if (municipioOptional.isEmpty()) {
+			return Response.status(Status.NOT_FOUND)
+					.entity("Municipio ativo nao encontrado.")
+					.build();
+		}
+
+		List<AlertaSemanalDTO> alertas = infoDengueService
+				.getAlertasPorAno(municipioOptional.get().getCodigoIbge(), anoConsulta);
 
 		return Response.ok(alertas).build();
 	}
@@ -92,6 +115,36 @@ public class DashboardResource {
 	@Operation(summary = "Comparativo semanal de dengue dos ultimos tres anos")
 	public Response comparativoDengueUltimosTresAnos() {
 		return Response.ok(infoDengueService.getComparativoUltimosTresAnos()).build();
+	}
+
+	@GET
+	@Path("/clima-casos/correlacao")
+	@RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+	@Operation(summary = "Correlacao semanal entre clima e casos de dengue")
+	public Response correlacaoClimaCasos(
+			@QueryParam("ano") Integer ano,
+			@QueryParam("lagSemanas") @DefaultValue("2") int lagSemanas,
+			@QueryParam("variavel") @DefaultValue("precipitacao") String variavel) {
+
+		int anoConsulta = ano != null ? ano : java.time.LocalDate.now().getYear();
+		if (anoConsulta < 2000 || anoConsulta > java.time.LocalDate.now().getYear()) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("Ano de consulta invalido.")
+					.build();
+		}
+		if (lagSemanas < 0 || lagSemanas > 8) {
+			return Response.status(Status.BAD_REQUEST)
+					.entity("lagSemanas deve estar entre 0 e 8.")
+					.build();
+		}
+
+		try {
+			return Response.ok(climaCasosCorrelacaoService.correlacao(anoConsulta, lagSemanas, variavel)).build();
+		} catch (NotAuthorizedException e) {
+			return Response.status(Status.UNAUTHORIZED).entity(e.getMessage()).build();
+		} catch (NotFoundException e) {
+			return Response.status(Status.NOT_FOUND).entity(e.getMessage()).build();
+		}
 	}
 
 	@GET
