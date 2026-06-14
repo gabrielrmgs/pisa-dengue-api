@@ -1,11 +1,10 @@
 package br.com.gemsbiotec.shapefile;
 
-import jakarta.annotation.security.PermitAll;
+import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
-import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
@@ -17,11 +16,11 @@ public class BairroDemografiaCsvResource {
 
     @GET
     @Path("/extrair")
-    @PermitAll
+    @RolesAllowed("ADMIN")
     @Produces(MediaType.APPLICATION_JSON)
-    public Response acionarExtrator(@QueryParam("arquivo") String arquivo) {
+    public Response acionarExtrator() {
         try {
-            BairroDemografiaCsvService.ResultadoImportacao resultado = bairroDemografiaCsvService.importar(arquivo);
+            BairroDemografiaCsvService.ResultadoImportacao resultado = bairroDemografiaCsvService.importar(null);
             return Response.ok(resultado).build();
         } catch (Exception e) {
             e.printStackTrace();

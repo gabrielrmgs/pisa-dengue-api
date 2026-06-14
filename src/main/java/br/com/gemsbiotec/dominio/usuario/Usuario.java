@@ -52,9 +52,9 @@ public class Usuario {
      * Este campo é a base do isolamento multi-tenant.
      * Não é possível alterar o município de um usuário após a criação.
      */
-    //@NotNull
+    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "municipio_id", nullable = true, updatable = true,
+    @JoinColumn(name = "municipio_id", nullable = false, updatable = false,
                 foreignKey = @ForeignKey(name = "fk_usuarios_municipio"))
     public Municipio municipio;
 

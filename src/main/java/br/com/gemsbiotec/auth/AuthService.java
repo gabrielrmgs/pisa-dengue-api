@@ -3,37 +3,33 @@ package br.com.gemsbiotec.auth;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-import br.com.gemsbiotec.dominio.usuario.Role;
 import br.com.gemsbiotec.dominio.usuario.Usuario;
 import br.com.gemsbiotec.repository.UsuarioRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.smallrye.jwt.build.Jwt;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.BadRequestException;
 
 @ApplicationScoped
 public class AuthService {
 
-    private UsuarioRepository usuarioRepository;
+    private final UsuarioRepository usuarioRepository;
 
-    @Inject
     public AuthService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
+    @Transactional
     public LoginResponse login(LoginRequest request) {
+        String email = request.email().trim().toLowerCase();
         Usuario usuario = usuarioRepository
-                .find("email", request.email())
-                .firstResultOptional()
-                .orElseThrow(() -> new BadRequestException("Credenciais inválidas"));
+                .findAtivoByEmailComMunicipio(email)
+                .orElseThrow(() -> new BadRequestException("Credenciais invalidas"));
 
-        if (Boolean.FALSE.equals(usuario.ativo))
-            throw new BadRequestException("Usuário inativo");
-
-        if (!BcryptUtil.matches(request.senha(), usuario.getSenhaHash()))
-            throw new BadRequestException("Credenciais inválidas");
+        if (!BcryptUtil.matches(request.senha(), usuario.getSenhaHash())) {
+            throw new BadRequestException("Credenciais invalidas");
+        }
 
         usuario.setUltimoLogin(LocalDateTime.now());
 
@@ -47,18 +43,5 @@ public class AuthService {
                 .sign();
 
         return new LoginResponse(token, usuario.getNome(), usuario.getRole());
-    }
-
-    @Transactional
-    public LoginResponse criarUsuario(LoginRequest request) {
-        Usuario novoUsuario = new Usuario();
-        novoUsuario.setEmail(request.email());
-        novoUsuario.setSenhaHash(BcryptUtil.bcryptHash(request.senha()));
-        novoUsuario.setNome("Gabriel");
-        novoUsuario.setRole(Role.ADMIN);
-
-        usuarioRepository.persist(novoUsuario);
-
-        return new LoginResponse("", novoUsuario.getNome(), novoUsuario.getRole());
     }
 }

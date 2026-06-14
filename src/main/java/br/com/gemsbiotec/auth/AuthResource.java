@@ -2,6 +2,7 @@ package br.com.gemsbiotec.auth;
 
 import jakarta.annotation.security.PermitAll;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.POST;
@@ -25,15 +26,8 @@ public class AuthResource {
     @POST
     @Path("/login")
     @PermitAll
-    public Response login(LoginRequest request) {
+    public Response login(@Valid LoginRequest request) {
         return Response.ok(authService.login(request)).build();
-    }
-
-    @POST
-    @Path("/criarAdmin")
-    @PermitAll
-    public Response criarAdmin(LoginRequest request) {
-        return Response.ok(authService.criarUsuario(request)).build();
     }
 
     @GET

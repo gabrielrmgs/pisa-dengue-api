@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
@@ -13,55 +14,134 @@ import java.util.Objects;
 import org.locationtech.jts.geom.MultiPolygon;
 
 @Entity
-@Table
+@Table(name = "bairros")
 public class Bairro {
 
     @Id
     @SequenceGenerator(name = "bairro_seq_gen", sequenceName = "bairro_seq")
     @GeneratedValue(generator = "bairro_seq_gen", strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
+    @Column(name = "nm_bairro")
     private String nome;
+
+    @Column(name = "cd_bairro")
     private String codigo;
+
+    @Column(name = "populacao")
     private Integer populacao;
+
+    @Column(name = "sexo_masculino")
     private Integer sexoMasculino;
+
+    @Column(name = "sexo_feminino")
     private Integer sexoFeminino;
+
+    @Column(name = "masculino_0_a_4_anos")
     private Integer masculino0a4Anos;
+
+    @Column(name = "masculino_5_a_9_anos")
     private Integer masculino5a9Anos;
+
+    @Column(name = "masculino_10_a_14_anos")
     private Integer masculino10a14Anos;
+
+    @Column(name = "masculino_15_a_19_anos")
     private Integer masculino15a19Anos;
+
+    @Column(name = "masculino_20_a_24_anos")
     private Integer masculino20a24Anos;
+
+    @Column(name = "masculino_25_a_29_anos")
     private Integer masculino25a29Anos;
+
+    @Column(name = "masculino_30_a_39_anos")
     private Integer masculino30a39Anos;
+
+    @Column(name = "masculino_40_a_49_anos")
     private Integer masculino40a49Anos;
+
+    @Column(name = "masculino_50_a_59_anos")
     private Integer masculino50a59Anos;
+
+    @Column(name = "masculino_60_a_69_anos")
     private Integer masculino60a69Anos;
+
+    @Column(name = "masculino_70_anos_ou_mais")
     private Integer masculino70AnosOuMais;
+
+    @Column(name = "feminino_0_a_4_anos")
     private Integer feminino0a4Anos;
+
+    @Column(name = "feminino_5_a_9_anos")
     private Integer feminino5a9Anos;
+
+    @Column(name = "feminino_10_a_14_anos")
     private Integer feminino10a14Anos;
+
+    @Column(name = "feminino_15_a_19_anos")
     private Integer feminino15a19Anos;
+
+    @Column(name = "feminino_20_a_24_anos")
     private Integer feminino20a24Anos;
+
+    @Column(name = "feminino_25_a_29_anos")
     private Integer feminino25a29Anos;
+
+    @Column(name = "feminino_30_a_39_anos")
     private Integer feminino30a39Anos;
+
+    @Column(name = "feminino_40_a_49_anos")
     private Integer feminino40a49Anos;
+
+    @Column(name = "feminino_50_a_59_anos")
     private Integer feminino50a59Anos;
+
+    @Column(name = "feminino_60_a_69_anos")
     private Integer feminino60a69Anos;
+
+    @Column(name = "feminino_70_anos_ou_mais")
     private Integer feminino70AnosOuMais;
+
+    @Column(name = "moradores_0_a_4_anos")
     private Integer moradores0a4Anos;
+
+    @Column(name = "moradores_5_a_9_anos")
     private Integer moradores5a9Anos;
+
+    @Column(name = "moradores_10_a_14_anos")
     private Integer moradores10a14Anos;
+
+    @Column(name = "moradores_15_a_19_anos")
     private Integer moradores15a19Anos;
+
+    @Column(name = "moradores_20_a_24_anos")
     private Integer moradores20a24Anos;
+
+    @Column(name = "moradores_25_a_29_anos")
     private Integer moradores25a29Anos;
+
+    @Column(name = "moradores_30_a_39_anos")
     private Integer moradores30a39Anos;
+
+    @Column(name = "moradores_40_a_49_anos")
     private Integer moradores40a49Anos;
+
+    @Column(name = "moradores_50_a_59_anos")
     private Integer moradores50a59Anos;
+
+    @Column(name = "moradores_60_a_69_anos")
     private Integer moradores60a69Anos;
+
+    @Column(name = "moradores_70_anos_ou_mais")
     private Integer moradores70AnosOuMais;
+
     @ManyToOne
+    @JoinColumn(name = "municipio_id")
     private Municipio municipio;
 
-    @Column(columnDefinition = "geometry(MultiPolygon, 4326)")
+    @Column(name = "geometria", columnDefinition = "geometry(MultiPolygon, 4326)")
     private MultiPolygon geometria;
 
 

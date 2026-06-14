@@ -12,20 +12,29 @@ import jakarta.persistence.Table;
 import java.util.Objects;
 
 @Entity
-@Table
+@Table(name = "municipios")
 public class Municipio {
 
     @Id
     @SequenceGenerator(sequenceName = "municipio_seq", name = "municipio_seq_gen")
     @GeneratedValue(generator = "municipio_seq_gen", strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
+    @Column(name = "nome")
     private String nome;
+
     @ManyToOne
     @JoinColumn(name = "estado_id")
     private Estado estado;
-    @Column(name = "codigoIbge")
+
+    @Column(name = "codigo_ibge")
     private String codigoIbge;
+
+    @Column(name = "populacao")
     private int populacao;
+
+    @Column(name = "ativo")
     private boolean ativo;
 
     public Municipio() {

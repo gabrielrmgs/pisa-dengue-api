@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -14,15 +15,22 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 
 @Entity
-@Table
+@Table(name = "estados")
 public class Estado {
 
     @Id
     @SequenceGenerator(name = "seq_estado_gen", sequenceName = "seq_estado")
     @GeneratedValue(generator = "seq_estado_gen", strategy = GenerationType.SEQUENCE)
+    @Column(name = "id", nullable = false, updatable = false)
     private Long id;
+
+    @Column(name = "codigo_uf", length = 2)
     private String codigoUf;
+
+    @Column(name = "nome")
     private String nome;
+
+    @Column(name = "sigla", length = 2)
     private String sigla;
     /**
      * Relacionamento bidirecional declarado aqui apenas para navegação JPA.
