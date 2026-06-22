@@ -32,7 +32,13 @@ public class BairroRepository implements PanacheRepositoryBase<Bairro, Long> {
     }
 
     public List<Bairro> listar() {
-        return list("municipio.id = ?1 ORDER BY nome", tenantContext.getMunicipioId());
+        return find("""
+                SELECT b FROM Bairro b
+                JOIN FETCH b.municipio m
+                LEFT JOIN FETCH m.estado
+                WHERE m.id = ?1
+                ORDER BY b.nome
+                """, tenantContext.getMunicipioId()).list();
     }
 
     public Optional<Bairro> findByCdBairro(String cdBairro) {

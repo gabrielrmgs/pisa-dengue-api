@@ -10,6 +10,7 @@ import br.com.gemsbiotec.dominio.saude.UnidadeSaude;
 import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Query;
 
 @ApplicationScoped
 public class UnidadeSaudeRepository implements PanacheRepositoryBase<UnidadeSaude, Long> {
@@ -76,7 +77,8 @@ public class UnidadeSaudeRepository implements PanacheRepositoryBase<UnidadeSaud
     }
 
     public String getGeoJsonUnidades(Long municipioId, TipoUnidadeSaude tipo) {
-        return (String) em.createNativeQuery("""
+        String filtroTipo = tipo == null ? "" : " AND u.tipo = :tipo";
+        String sql = """
                 SELECT json_build_object(
                     'type',     'FeatureCollection',
                     'features', COALESCE(json_agg(feat), '[]'::json)
@@ -104,13 +106,17 @@ public class UnidadeSaudeRepository implements PanacheRepositoryBase<UnidadeSaud
                     WHERE u.municipio_id = :municipioId
                       AND u.ativo = true
                       AND u.localizacao IS NOT NULL
-                      AND (:tipo IS NULL OR u.tipo = :tipo)
+                      %s
                     ORDER BY u.nome
                 ) sub
-                """)
-                .setParameter("municipioId", municipioId)
-                .setParameter("tipo", tipo != null ? tipo.name() : null)
-                .getSingleResult();
+                """.formatted(filtroTipo);
+
+        Query query = em.createNativeQuery(sql)
+                .setParameter("municipioId", municipioId);
+        if (tipo != null) {
+            query.setParameter("tipo", tipo.name());
+        }
+        return (String) query.getSingleResult();
     }
 
 }

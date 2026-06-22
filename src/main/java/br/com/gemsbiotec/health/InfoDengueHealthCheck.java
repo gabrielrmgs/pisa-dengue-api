@@ -3,11 +3,11 @@ package br.com.gemsbiotec.health;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 import org.eclipse.microprofile.health.HealthCheck;
 import org.eclipse.microprofile.health.HealthCheckResponse;
-import org.eclipse.microprofile.health.Readiness;
+import io.smallrye.health.api.HealthGroup;
 
 import jakarta.enterprise.context.ApplicationScoped;
 
-@Readiness
+@HealthGroup("external")
 @ApplicationScoped
 public class InfoDengueHealthCheck extends ExternalHttpHealthSupport implements HealthCheck {
 

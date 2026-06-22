@@ -15,6 +15,7 @@ import org.jboss.logging.Logger;
 import io.quarkus.cache.CacheResult;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.ServiceUnavailableException;
 
 @ApplicationScoped
 public class OpenMeteoService {
@@ -47,13 +48,13 @@ public class OpenMeteoService {
         } catch (Exception e) {
             LOG.errorf("Falha ao consultar Open-Meteo Archive [lat=%f lon=%f inicio=%s fim=%s]: %s",
                     latitude, longitude, inicio, fim, e.getMessage());
-            return List.of();
+            throw new ServiceUnavailableException("Open-Meteo temporariamente indisponivel.");
         }
     }
 
     private List<ClimaSemana> agregarPorSemana(OpenMeteoArchiveResponse response) {
         if (response == null || response.hourly == null || response.hourly.time == null) {
-            return List.of();
+            throw new ServiceUnavailableException("Open-Meteo retornou uma resposta incompleta.");
         }
 
         Map<Integer, AcumuladorSemana> acumuladores = new LinkedHashMap<>();

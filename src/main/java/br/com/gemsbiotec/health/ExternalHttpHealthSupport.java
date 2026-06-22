@@ -11,7 +11,7 @@ import org.eclipse.microprofile.health.HealthCheckResponseBuilder;
 
 abstract class ExternalHttpHealthSupport {
 
-    private static final Duration TIMEOUT = Duration.ofSeconds(5);
+    private static final Duration TIMEOUT = Duration.ofSeconds(2);
 
     private final HttpClient httpClient = HttpClient.newBuilder()
             .connectTimeout(TIMEOUT)
@@ -25,7 +25,7 @@ abstract class ExternalHttpHealthSupport {
                     .build();
 
             HttpResponse<Void> response = httpClient.send(request, HttpResponse.BodyHandlers.discarding());
-            boolean up = response.statusCode() >= 200 && response.statusCode() < 500;
+            boolean up = response.statusCode() >= 200 && response.statusCode() < 400;
 
             HealthCheckResponseBuilder builder = HealthCheckResponse.named(name)
                     .withData("statusCode", response.statusCode());
@@ -34,7 +34,7 @@ abstract class ExternalHttpHealthSupport {
         } catch (Exception e) {
             return HealthCheckResponse.named(name)
                     .down()
-                    .withData("error", e.getMessage())
+                    .withData("error", "Falha ao consultar dependencia externa")
                     .build();
         }
     }

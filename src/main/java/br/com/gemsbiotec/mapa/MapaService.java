@@ -10,6 +10,7 @@ import br.com.gemsbiotec.mapa.dto.FeatureCollection;
 import br.com.gemsbiotec.repository.BairroRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.CacheControl;
 
 @ApplicationScoped
 public class MapaService {
@@ -44,7 +45,7 @@ public class MapaService {
             collection.features.add(feature);
         }
 
-        return Response.ok(collection).build();
+        return Response.ok(collection).cacheControl(cachePrivado(3600)).build();
     }
 
     public Response geoJsonMunicipioComDemografia() {
@@ -107,6 +108,14 @@ public class MapaService {
             collection.features.add(feature);
         }
 
-        return Response.ok(collection).build();
+        return Response.ok(collection).cacheControl(cachePrivado(300)).build();
+    }
+
+    private CacheControl cachePrivado(int maxAge) {
+        CacheControl cacheControl = new CacheControl();
+        cacheControl.setPrivate(true);
+        cacheControl.setMaxAge(maxAge);
+        cacheControl.setMustRevalidate(true);
+        return cacheControl;
     }
 }

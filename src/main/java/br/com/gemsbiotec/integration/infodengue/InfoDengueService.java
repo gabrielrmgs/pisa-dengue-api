@@ -16,7 +16,6 @@ import br.com.gemsbiotec.repository.MunicipioRepository;
 import java.time.LocalDate;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -24,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import jakarta.ws.rs.ServiceUnavailableException;
 
 /**
  * Serviço de negócio para dados do InfoDengue.
@@ -86,7 +86,7 @@ public class InfoDengueService {
         } catch (Exception e) {
             LOG.errorf("Falha ao consultar InfoDengue [geocode=%s ano=%d]: %s",
                     geocode, ano, e.getMessage());
-            return Collections.emptyList();
+            throw new ServiceUnavailableException("InfoDengue temporariamente indisponivel.");
         }
     }
 

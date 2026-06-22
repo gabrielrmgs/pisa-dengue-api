@@ -6,9 +6,9 @@ import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import org.jboss.logging.Logger;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import jakarta.ws.rs.ServiceUnavailableException;
 
 /**
  * Servico de negocio para dados do IBGE.
@@ -32,7 +32,7 @@ public class IbgeService {
             return Optional.ofNullable(dadosClient.getMunicipioInfo(geocodigo));
         } catch (Exception e) {
             LOG.errorf("Falha ao buscar info municipio IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
-            return Optional.empty();
+            throw indisponivel();
         }
     }
 
@@ -47,7 +47,7 @@ public class IbgeService {
                     .orElse(0L);
         } catch (Exception e) {
             LOG.errorf("Falha ao buscar populacao IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
-            return 0L;
+            throw indisponivel();
         }
     }
 
@@ -74,7 +74,7 @@ public class IbgeService {
             return new PopulacaoPorSexoDTO(total, masculino, feminino);
         } catch (Exception e) {
             LOG.errorf("Falha ao buscar pop. por sexo IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
-            return new PopulacaoPorSexoDTO(0L, 0L, 0L);
+            throw indisponivel();
         }
     }
 
@@ -90,7 +90,7 @@ public class IbgeService {
                     .toList();
         } catch (Exception e) {
             LOG.errorf("Falha ao buscar faixa etaria IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
-            return Collections.emptyList();
+            throw indisponivel();
         }
     }
 
@@ -108,8 +108,12 @@ public class IbgeService {
                     .toList();
         } catch (Exception e) {
             LOG.errorf("Falha ao buscar faixa etaria por sexo IBGE [geocodigo=%s]: %s", geocodigo, e.getMessage());
-            return Collections.emptyList();
+            throw indisponivel();
         }
+    }
+
+    private ServiceUnavailableException indisponivel() {
+        return new ServiceUnavailableException("IBGE temporariamente indisponivel.");
     }
 
     public record PopulacaoPorSexoDTO(long total, long masculino, long feminino) {

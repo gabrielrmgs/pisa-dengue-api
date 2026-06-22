@@ -28,7 +28,8 @@ public class WebApplicationExceptionMapper implements ExceptionMapper<WebApplica
 
         ApiErrorResponse body = ApiErrorResponse.of(status, reason, message, path());
 
-        return Response.status(status)
+        Response.ResponseBuilder builder = original != null ? Response.fromResponse(original) : Response.status(status);
+        return builder
                 .type(MediaType.APPLICATION_JSON)
                 .entity(body)
                 .build();
