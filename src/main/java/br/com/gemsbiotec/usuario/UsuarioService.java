@@ -1,11 +1,19 @@
 package br.com.gemsbiotec.usuario;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import br.com.gemsbiotec.auth.TenantContext;
 import br.com.gemsbiotec.dominio.geo.Municipio;
 import br.com.gemsbiotec.dominio.usuario.Role;
 import br.com.gemsbiotec.dominio.usuario.Usuario;
+import br.com.gemsbiotec.dominio.saude.UnidadeSaude;
+import br.com.gemsbiotec.dominio.saude.UsuarioUnidadeSaude;
 import br.com.gemsbiotec.repository.MunicipioRepository;
+import br.com.gemsbiotec.repository.UnidadeSaudeRepository;
 import br.com.gemsbiotec.repository.UsuarioRepository;
+import br.com.gemsbiotec.repository.UsuarioUnidadeSaudeRepository;
 import io.quarkus.elytron.security.common.BcryptUtil;
 import io.quarkus.security.identity.SecurityIdentity;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -23,16 +31,93 @@ public class UsuarioService {
     private final MunicipioRepository municipioRepository;
     private final TenantContext tenantContext;
     private final SecurityIdentity securityIdentity;
+    private final UnidadeSaudeRepository unidadeSaudeRepository;
+    private final UsuarioUnidadeSaudeRepository usuarioUnidadeSaudeRepository;
 
     public UsuarioService(
             UsuarioRepository usuarioRepository,
             MunicipioRepository municipioRepository,
             TenantContext tenantContext,
-            SecurityIdentity securityIdentity) {
+            SecurityIdentity securityIdentity,
+            UnidadeSaudeRepository unidadeSaudeRepository,
+            UsuarioUnidadeSaudeRepository usuarioUnidadeSaudeRepository) {
         this.usuarioRepository = usuarioRepository;
         this.municipioRepository = municipioRepository;
         this.tenantContext = tenantContext;
         this.securityIdentity = securityIdentity;
+        this.unidadeSaudeRepository = unidadeSaudeRepository;
+        this.usuarioUnidadeSaudeRepository = usuarioUnidadeSaudeRepository;
+    }
+
+    @Transactional
+    public List<UsuarioResponse> listar() {
+        Long municipioId = exigirMunicipioLogado();
+        return usuarioRepository.listAtivosByMunicipio(municipioId).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    @Transactional
+    public VinculosUsuarioResponse buscarVinculos(Long usuarioId) {
+        Long municipioId = exigirMunicipioLogado();
+        Usuario usuario = buscarUsuarioDoTenant(usuarioId, municipioId);
+        return toVinculosResponse(usuario,
+                usuarioUnidadeSaudeRepository.listByUsuarioETenant(usuarioId, municipioId));
+    }
+
+    @Transactional
+    public VinculosUsuarioResponse meusVinculos() {
+        Long municipioId = exigirMunicipioLogado();
+        Long usuarioId = tenantContext.getUsuarioId();
+        if (usuarioId == null) {
+            throw new ForbiddenException("Usuario logado nao encontrado.");
+        }
+        Usuario usuario = buscarUsuarioDoTenant(usuarioId, municipioId);
+        return toVinculosResponse(usuario,
+                usuarioUnidadeSaudeRepository.listByUsuarioETenant(usuarioId, municipioId));
+    }
+
+    @Transactional
+    public VinculosUsuarioResponse atualizarVinculos(
+            Long usuarioId,
+            AtualizarVinculosUnidadesRequest request) {
+        Long municipioId = exigirMunicipioLogado();
+        Usuario usuario = buscarUsuarioDoTenant(usuarioId, municipioId);
+
+        Set<Long> unidadeIds = new HashSet<>(request.unidadeIds());
+        if (unidadeIds.size() != request.unidadeIds().size()) {
+            throw new BadRequestException("A lista de unidades possui identificadores duplicados.");
+        }
+        if (!unidadeIds.isEmpty() && request.unidadePrincipalId() == null) {
+            throw new BadRequestException("A unidade principal e obrigatoria quando existem unidades vinculadas.");
+        }
+        if (request.unidadePrincipalId() != null && !unidadeIds.contains(request.unidadePrincipalId())) {
+            throw new BadRequestException("A unidade principal deve estar entre as unidades vinculadas.");
+        }
+
+        List<UnidadeSaude> unidades = unidadeIds.stream()
+                .map(id -> unidadeSaudeRepository.findByIdETenant(id, municipioId)
+                        .orElseThrow(() -> new NotFoundException("Unidade de saude nao encontrada: " + id)))
+                .toList();
+
+        if (unidades.stream().anyMatch(unidade -> !Boolean.TRUE.equals(unidade.getAtivo()))) {
+            throw new BadRequestException("Somente unidades ativas podem receber novos vinculos.");
+        }
+
+        usuarioUnidadeSaudeRepository.deleteByUsuarioETenant(usuarioId, municipioId);
+        usuarioUnidadeSaudeRepository.flush();
+
+        for (UnidadeSaude unidade : unidades) {
+            UsuarioUnidadeSaude vinculo = new UsuarioUnidadeSaude();
+            vinculo.setUsuario(usuario);
+            vinculo.setUnidadeSaude(unidade);
+            vinculo.setPrincipal(unidade.getId().equals(request.unidadePrincipalId()));
+            usuarioUnidadeSaudeRepository.persist(vinculo);
+        }
+        usuarioUnidadeSaudeRepository.flush();
+
+        return toVinculosResponse(usuario,
+                usuarioUnidadeSaudeRepository.listByUsuarioETenant(usuarioId, municipioId));
     }
 
     @Transactional
@@ -97,6 +182,36 @@ public class UsuarioService {
         }
 
         throw new ForbiddenException("Role nao permitida para o usuario logado.");
+    }
+
+    private Long exigirMunicipioLogado() {
+        Long municipioId = tenantContext.getMunicipioId();
+        if (municipioId == null) {
+            throw new ForbiddenException("Municipio do usuario logado nao encontrado.");
+        }
+        return municipioId;
+    }
+
+    private Usuario buscarUsuarioDoTenant(Long usuarioId, Long municipioId) {
+        return usuarioRepository.findAtivoByIdETenant(usuarioId, municipioId)
+                .orElseThrow(() -> new NotFoundException("Usuario ativo nao encontrado."));
+    }
+
+    private VinculosUsuarioResponse toVinculosResponse(
+            Usuario usuario,
+            List<UsuarioUnidadeSaude> vinculos) {
+        List<UnidadeVinculadaResponse> unidades = vinculos.stream()
+                .map(vinculo -> {
+                    UnidadeSaude unidade = vinculo.getUnidadeSaude();
+                    return new UnidadeVinculadaResponse(
+                            unidade.getId(),
+                            unidade.getNome(),
+                            unidade.getTipo(),
+                            unidade.getAtivo(),
+                            vinculo.getPrincipal());
+                })
+                .toList();
+        return new VinculosUsuarioResponse(usuario.getId(), usuario.getNome(), unidades);
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {

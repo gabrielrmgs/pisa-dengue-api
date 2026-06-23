@@ -7,6 +7,8 @@ import org.eclipse.microprofile.openapi.annotations.tags.Tag;
 
 import br.com.gemsbiotec.dominio.saude.TipoUnidadeSaude;
 import br.com.gemsbiotec.saude.dto.AtualizarUnidadeSaudeRequest;
+import br.com.gemsbiotec.saude.dto.AtualizarCapacidadesUnidadeRequest;
+import br.com.gemsbiotec.saude.dto.CapacidadesUnidadeResponse;
 import br.com.gemsbiotec.saude.dto.CriarUnidadeSaudeRequest;
 import br.com.gemsbiotec.saude.dto.UnidadeSaudeResponse;
 import jakarta.annotation.security.RolesAllowed;
@@ -31,9 +33,13 @@ import jakarta.ws.rs.core.Response;
 public class UnidadeSaudeResource {
 
     private final UnidadeSaudeService unidadeSaudeService;
+    private final CapacidadeAssistencialService capacidadeAssistencialService;
 
-    public UnidadeSaudeResource(UnidadeSaudeService unidadeSaudeService) {
+    public UnidadeSaudeResource(
+            UnidadeSaudeService unidadeSaudeService,
+            CapacidadeAssistencialService capacidadeAssistencialService) {
         this.unidadeSaudeService = unidadeSaudeService;
+        this.capacidadeAssistencialService = capacidadeAssistencialService;
     }
 
     @GET
@@ -52,6 +58,24 @@ public class UnidadeSaudeResource {
     @Operation(summary = "Busca uma unidade de saude por ID")
     public UnidadeSaudeResponse buscar(@PathParam("id") Long id) {
         return unidadeSaudeService.buscar(id);
+    }
+
+    @GET
+    @Path("/{id}/capacidades")
+    @RolesAllowed({ "ADMIN", "GESTOR", "AGENTE", "VIEWER" })
+    @Operation(summary = "Lista as capacidades assistenciais configuradas na unidade")
+    public CapacidadesUnidadeResponse buscarCapacidades(@PathParam("id") Long id) {
+        return capacidadeAssistencialService.buscarPorUnidade(id);
+    }
+
+    @PUT
+    @Path("/{id}/capacidades")
+    @RolesAllowed("ADMIN")
+    @Operation(summary = "Substitui as capacidades assistenciais configuradas na unidade")
+    public CapacidadesUnidadeResponse atualizarCapacidades(
+            @PathParam("id") Long id,
+            @Valid AtualizarCapacidadesUnidadeRequest request) {
+        return capacidadeAssistencialService.atualizar(id, request);
     }
 
     @POST
