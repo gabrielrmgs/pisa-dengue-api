@@ -91,6 +91,7 @@ public class UnidadeSaudeRepository implements PanacheRepositoryBase<UnidadeSaud
                             'id',          u.id,
                             'nome',        u.nome,
                             'tipo',        u.tipo,
+                            'iconePin',    COALESCE(u.icone_pin, 'CRUZ'),
                             'cnes',        u.cnes,
                             'endereco',    u.endereco,
                             'telefone',    u.telefone,

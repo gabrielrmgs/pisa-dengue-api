@@ -28,7 +28,7 @@ public class UsuarioResource {
     }
 
     @POST
-    @RolesAllowed({ "ADMIN", "GESTOR" })
+    @RolesAllowed("ADMIN")
     @Operation(summary = "Cadastra um novo usuario vinculado a um municipio")
     public Response criar(@Valid CriarUsuarioRequest request) {
         UsuarioResponse usuario = usuarioService.criar(request);
@@ -42,6 +42,16 @@ public class UsuarioResource {
     @Operation(summary = "Lista os usuarios ativos do municipio logado")
     public List<UsuarioResponse> listar() {
         return usuarioService.listar();
+    }
+
+    @PUT
+    @Path("/{id}")
+    @RolesAllowed("ADMIN")
+    @Operation(summary = "Atualiza nome, perfil e status de um usuario do municipio logado")
+    public UsuarioResponse atualizar(
+            @PathParam("id") Long id,
+            @Valid AtualizarUsuarioRequest request) {
+        return usuarioService.atualizar(id, request);
     }
 
     @GET

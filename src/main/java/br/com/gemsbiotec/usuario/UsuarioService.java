@@ -52,7 +52,7 @@ public class UsuarioService {
     @Transactional
     public List<UsuarioResponse> listar() {
         Long municipioId = exigirMunicipioLogado();
-        return usuarioRepository.listAtivosByMunicipio(municipioId).stream()
+        return usuarioRepository.listByMunicipio(municipioId).stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -60,7 +60,7 @@ public class UsuarioService {
     @Transactional
     public VinculosUsuarioResponse buscarVinculos(Long usuarioId) {
         Long municipioId = exigirMunicipioLogado();
-        Usuario usuario = buscarUsuarioDoTenant(usuarioId, municipioId);
+        Usuario usuario = buscarUsuarioDoTenantIncluindoInativo(usuarioId, municipioId);
         return toVinculosResponse(usuario,
                 usuarioUnidadeSaudeRepository.listByUsuarioETenant(usuarioId, municipioId));
     }
@@ -82,7 +82,7 @@ public class UsuarioService {
             Long usuarioId,
             AtualizarVinculosUnidadesRequest request) {
         Long municipioId = exigirMunicipioLogado();
-        Usuario usuario = buscarUsuarioDoTenant(usuarioId, municipioId);
+        Usuario usuario = buscarUsuarioDoTenantIncluindoInativo(usuarioId, municipioId);
 
         Set<Long> unidadeIds = new HashSet<>(request.unidadeIds());
         if (unidadeIds.size() != request.unidadeIds().size()) {
@@ -149,10 +149,14 @@ public class UsuarioService {
 
     private Long resolverMunicipioId(CriarUsuarioRequest request) {
         if (securityIdentity.hasRole(Role.ADMIN.name())) {
-            if (request.municipioId() == null) {
-                throw new BadRequestException("municipioId e obrigatorio para ADMIN.");
+            Long municipioIdLogado = tenantContext.getMunicipioId();
+            if (municipioIdLogado == null) {
+                throw new ForbiddenException("Municipio do usuario logado nao encontrado.");
             }
-            return request.municipioId();
+            if (request.municipioId() != null && !request.municipioId().equals(municipioIdLogado)) {
+                throw new ForbiddenException("ADMIN municipal so pode criar usuarios no proprio municipio.");
+            }
+            return municipioIdLogado;
         }
 
         if (securityIdentity.hasRole(Role.GESTOR.name())) {
@@ -169,6 +173,24 @@ public class UsuarioService {
         }
 
         throw new ForbiddenException("Usuario sem permissao para criar usuarios.");
+    }
+
+    @Transactional
+    public UsuarioResponse atualizar(Long usuarioId, AtualizarUsuarioRequest request) {
+        Long municipioId = exigirMunicipioLogado();
+        Usuario usuario = buscarUsuarioDoTenantIncluindoInativo(usuarioId, municipioId);
+        validarRolePermitida(request.role());
+
+        usuario.setNome(request.nome().trim());
+        usuario.setRole(request.role());
+        usuario.setAtivo(request.ativo());
+        return toResponse(usuario);
+    }
+
+    private Usuario buscarUsuarioDoTenantIncluindoInativo(Long usuarioId, Long municipioId) {
+        return usuarioRepository.find("id = ?1 AND municipio.id = ?2", usuarioId, municipioId)
+                .firstResultOptional()
+                .orElseThrow(() -> new NotFoundException("Usuario nao encontrado."));
     }
 
     private void validarRolePermitida(Role role) {

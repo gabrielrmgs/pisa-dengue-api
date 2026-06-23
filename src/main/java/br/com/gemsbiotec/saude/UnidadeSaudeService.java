@@ -9,6 +9,7 @@ import org.locationtech.jts.geom.Point;
 import br.com.gemsbiotec.auth.TenantContext;
 import br.com.gemsbiotec.dominio.geo.Bairro;
 import br.com.gemsbiotec.dominio.geo.Municipio;
+import br.com.gemsbiotec.dominio.saude.IconePinUnidadeSaude;
 import br.com.gemsbiotec.dominio.saude.TipoUnidadeSaude;
 import br.com.gemsbiotec.dominio.saude.UnidadeSaude;
 import br.com.gemsbiotec.repository.BairroRepository;
@@ -74,7 +75,7 @@ public class UnidadeSaudeService {
 
         UnidadeSaude unidade = new UnidadeSaude();
         unidade.setMunicipio(municipio);
-        aplicarDados(unidade, request.nome(), request.tipo(), cnes, request.endereco(), request.telefone(),
+        aplicarDados(unidade, request.nome(), request.tipo(), request.iconePin(), cnes, request.endereco(), request.telefone(),
                 request.email(), request.responsavel(), request.bairroId(), request.latitude(), request.longitude(),
                 null);
         unidade.setAtivo(true);
@@ -95,7 +96,7 @@ public class UnidadeSaudeService {
             throw new WebApplicationException("CNES ja cadastrado para este municipio.", Response.Status.CONFLICT);
         }
 
-        aplicarDados(unidade, request.nome(), request.tipo(), cnes, request.endereco(), request.telefone(),
+        aplicarDados(unidade, request.nome(), request.tipo(), request.iconePin(), cnes, request.endereco(), request.telefone(),
                 request.email(), request.responsavel(), request.bairroId(), request.latitude(), request.longitude(),
                 request.ativo());
         return toResponse(unidade);
@@ -129,6 +130,7 @@ public class UnidadeSaudeService {
             UnidadeSaude unidade,
             String nome,
             TipoUnidadeSaude tipo,
+            IconePinUnidadeSaude iconePin,
             String cnes,
             String endereco,
             String telefone,
@@ -140,6 +142,7 @@ public class UnidadeSaudeService {
             Boolean ativo) {
         unidade.setNome(nome.trim());
         unidade.setTipo(tipo);
+        unidade.setIconePin(iconePin != null ? iconePin : IconePinUnidadeSaude.CRUZ);
         unidade.setCnes(cnes);
         unidade.setEndereco(normalizarTexto(endereco));
         unidade.setTelefone(normalizarTexto(telefone));
@@ -205,6 +208,7 @@ public class UnidadeSaudeService {
                 bairro != null ? bairro.getNome() : null,
                 unidade.getNome(),
                 unidade.getTipo(),
+                unidade.getIconePin(),
                 unidade.getCnes(),
                 unidade.getEndereco(),
                 unidade.getTelefone(),

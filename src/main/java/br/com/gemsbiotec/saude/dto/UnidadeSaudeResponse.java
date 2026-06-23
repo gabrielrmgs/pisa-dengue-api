@@ -2,6 +2,7 @@ package br.com.gemsbiotec.saude.dto;
 
 import java.time.LocalDateTime;
 
+import br.com.gemsbiotec.dominio.saude.IconePinUnidadeSaude;
 import br.com.gemsbiotec.dominio.saude.TipoUnidadeSaude;
 
 public record UnidadeSaudeResponse(
@@ -12,6 +13,7 @@ public record UnidadeSaudeResponse(
         String bairroNome,
         String nome,
         TipoUnidadeSaude tipo,
+        IconePinUnidadeSaude iconePin,
         String cnes,
         String endereco,
         String telefone,

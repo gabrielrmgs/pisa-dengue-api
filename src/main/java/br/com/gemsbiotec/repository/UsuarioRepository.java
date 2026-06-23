@@ -58,6 +58,13 @@ public class UsuarioRepository implements PanacheRepositoryBase<Usuario, Long> {
                 """, municipioId);
     }
 
+    public List<Usuario> listByMunicipio(Long municipioId) {
+        return list("""
+                municipio.id = ?1
+                ORDER BY ativo DESC, nome
+                """, municipioId);
+    }
+
     /**
      * Lista usuários ativos por role dentro do município.
      * Ex: listar todos os agentes para atribuição de triagens.

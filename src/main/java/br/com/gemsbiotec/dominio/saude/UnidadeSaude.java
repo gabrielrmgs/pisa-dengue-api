@@ -67,6 +67,11 @@ public class UnidadeSaude {
     @Column(name = "tipo", nullable = false, length = 30)
     private TipoUnidadeSaude tipo;
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(name = "icone_pin", nullable = false, length = 30)
+    private IconePinUnidadeSaude iconePin = IconePinUnidadeSaude.CRUZ;
+
     @Size(max = 20)
     @Column(name = "cnes", length = 20)
     private String cnes;
@@ -141,6 +146,14 @@ public class UnidadeSaude {
 
     public void setTipo(TipoUnidadeSaude tipo) {
         this.tipo = tipo;
+    }
+
+    public IconePinUnidadeSaude getIconePin() {
+        return iconePin;
+    }
+
+    public void setIconePin(IconePinUnidadeSaude iconePin) {
+        this.iconePin = iconePin;
     }
 
     public String getCnes() {

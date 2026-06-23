@@ -1,5 +1,6 @@
 package br.com.gemsbiotec.saude.dto;
 
+import br.com.gemsbiotec.dominio.saude.IconePinUnidadeSaude;
 import br.com.gemsbiotec.dominio.saude.TipoUnidadeSaude;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -15,6 +16,8 @@ public record CriarUnidadeSaudeRequest(
 
         @NotNull(message = "Tipo e obrigatorio")
         TipoUnidadeSaude tipo,
+
+        IconePinUnidadeSaude iconePin,
 
         @Size(max = 20, message = "CNES deve ter no maximo 20 caracteres")
         String cnes,
