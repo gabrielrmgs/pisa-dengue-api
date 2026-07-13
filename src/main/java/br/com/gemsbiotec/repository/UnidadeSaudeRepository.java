@@ -62,6 +62,10 @@ public class UnidadeSaudeRepository implements PanacheRepositoryBase<UnidadeSaud
         return find(query.toString(), params).list();
     }
 
+    public Optional<UnidadeSaude> findByNomeIgnoreCaseETenant(String nome, Long municipioId) {
+        return find("LOWER(nome) = LOWER(?1) AND municipio.id = ?2", nome, municipioId).firstResultOptional();
+    }
+
     public boolean existsByCnesETenant(String cnes, Long municipioId) {
         if (cnes == null || cnes.isBlank()) {
             return false;

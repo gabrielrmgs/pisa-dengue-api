@@ -17,6 +17,7 @@ import br.com.gemsbiotec.repository.UnidadeSaudeRepository;
 import br.com.gemsbiotec.repository.UsuarioRepository;
 import br.com.gemsbiotec.repository.VacinacaoDadosRepository;
 import br.com.gemsbiotec.repository.VacinacaoRegistroRepository;
+import br.com.gemsbiotec.saude.UnidadeSaudeService;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoResumoResponse;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoUnidadeResponse;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -32,6 +33,7 @@ public class VacinacaoService {
     private final UnidadeSaudeRepository unidadeSaudeRepository;
     private final UsuarioRepository usuarioRepository;
     private final VacinacaoRegistroRepository vacinacaoRegistroRepository;
+    private final UnidadeSaudeService unidadeSaudeService;
 
     public VacinacaoService(
             TenantContext tenantContext,
@@ -39,13 +41,15 @@ public class VacinacaoService {
             VacinacaoDadosRepository vacinacaoDadosRepository,
             UnidadeSaudeRepository unidadeSaudeRepository,
             UsuarioRepository usuarioRepository,
-            VacinacaoRegistroRepository vacinacaoRegistroRepository) {
+            VacinacaoRegistroRepository vacinacaoRegistroRepository,
+            UnidadeSaudeService unidadeSaudeService) {
         this.tenantContext = tenantContext;
         this.municipioRepository = municipioRepository;
         this.vacinacaoDadosRepository = vacinacaoDadosRepository;
         this.unidadeSaudeRepository = unidadeSaudeRepository;
         this.usuarioRepository = usuarioRepository;
         this.vacinacaoRegistroRepository = vacinacaoRegistroRepository;
+        this.unidadeSaudeService = unidadeSaudeService;
     }
 
     public List<VacinacaoUnidadeResponse> listarUnidades() {
@@ -158,6 +162,72 @@ public class VacinacaoService {
                 .filter(u -> u.unidadeSaudeId().equals(unidade.getId()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    @jakarta.transaction.Transactional
+    public br.com.gemsbiotec.vacinacao.dto.ImportarVacinacaoResponse importar(
+            java.io.InputStream inputStream, LocalDate dataReferencia) throws java.io.IOException {
+        Long municipioId = municipioIdObrigatorio();
+        Municipio municipio = municipioRepository.findAtivoById(municipioId)
+                .orElseThrow(() -> new NotFoundException("Municipio ativo nao encontrado."));
+
+        VacinacaoCsvParser.ResultadoParseCsv resultado;
+        try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                new java.io.InputStreamReader(inputStream, java.nio.charset.StandardCharsets.UTF_8))) {
+            resultado = VacinacaoCsvParser.parse(reader);
+        }
+
+        List<String> avisos = new ArrayList<>(resultado.avisos());
+        int unidadesCasadas = 0;
+        int unidadesCriadas = 0;
+
+        for (VacinacaoCsvParser.LinhaVacinacaoCsv linha : resultado.linhas()) {
+            boolean existiaAntes = unidadeSaudeRepository.findByNomeIgnoreCaseETenant(linha.unidadeNome(), municipioId).isPresent();
+            UnidadeSaude unidade = obterOuCriarUnidade(linha.unidadeNome(), municipioId, municipio, avisos);
+            if (unidade == null) {
+                continue;
+            }
+            if (existiaAntes) {
+                unidadesCasadas++;
+            } else {
+                unidadesCriadas++;
+            }
+
+            VacinacaoDados snapshot = vacinacaoDadosRepository.findByUnidadeEData(unidade.getId(), dataReferencia)
+                    .orElseGet(VacinacaoDados::new);
+            snapshot.setUnidadeSaude(unidade);
+            snapshot.setDataReferencia(dataReferencia);
+            snapshot.setDoses10a14(linha.doses10a14());
+            snapshot.setDoses18a59(linha.doses18a59());
+            snapshot.setDosesTotal(linha.doses10a14() + linha.doses18a59());
+            snapshot.setOrigem(br.com.gemsbiotec.dominio.vacinacao.OrigemVacinacao.IMPORTACAO);
+            if (snapshot.getId() == null) {
+                vacinacaoDadosRepository.persist(snapshot);
+            }
+        }
+        vacinacaoDadosRepository.flush();
+
+        return new br.com.gemsbiotec.vacinacao.dto.ImportarVacinacaoResponse(
+                dataReferencia, unidadesCasadas, unidadesCriadas,
+                resultado.linhas().size(), resultado.linhasInvalidas(), avisos);
+    }
+
+    private UnidadeSaude obterOuCriarUnidade(String nome, Long municipioId, Municipio municipio, List<String> avisos) {
+        return unidadeSaudeRepository.findByNomeIgnoreCaseETenant(nome, municipioId)
+                .orElseGet(() -> {
+                    if (municipio.getLatitude() == null || municipio.getLongitude() == null) {
+                        avisos.add("Unidade '" + nome + "' nao encontrada e nao pode ser criada: "
+                                + "municipio sem coordenadas de referencia (recalcule o centroide antes de importar).");
+                        return null;
+                    }
+                    br.com.gemsbiotec.saude.dto.CriarUnidadeSaudeRequest request =
+                            new br.com.gemsbiotec.saude.dto.CriarUnidadeSaudeRequest(
+                                    nome, br.com.gemsbiotec.dominio.saude.TipoUnidadeSaude.UBS,
+                                    null, null, null, null, null, null, null,
+                                    municipio.getLatitude(), municipio.getLongitude());
+                    br.com.gemsbiotec.saude.dto.UnidadeSaudeResponse criada = unidadeSaudeService.criar(request);
+                    return unidadeSaudeRepository.findById(criada.id());
+                });
     }
 
     private Map<Long, List<VacinacaoDados>> agruparPorUnidade(List<VacinacaoDados> registros) {
