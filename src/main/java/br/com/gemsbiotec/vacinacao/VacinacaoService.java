@@ -11,8 +11,12 @@ import br.com.gemsbiotec.dominio.geo.Bairro;
 import br.com.gemsbiotec.dominio.geo.Municipio;
 import br.com.gemsbiotec.dominio.saude.UnidadeSaude;
 import br.com.gemsbiotec.dominio.vacinacao.VacinacaoDados;
+import br.com.gemsbiotec.dominio.vacinacao.VacinacaoRegistro;
 import br.com.gemsbiotec.repository.MunicipioRepository;
+import br.com.gemsbiotec.repository.UnidadeSaudeRepository;
+import br.com.gemsbiotec.repository.UsuarioRepository;
 import br.com.gemsbiotec.repository.VacinacaoDadosRepository;
+import br.com.gemsbiotec.repository.VacinacaoRegistroRepository;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoResumoResponse;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoUnidadeResponse;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -25,14 +29,23 @@ public class VacinacaoService {
     private final TenantContext tenantContext;
     private final MunicipioRepository municipioRepository;
     private final VacinacaoDadosRepository vacinacaoDadosRepository;
+    private final UnidadeSaudeRepository unidadeSaudeRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final VacinacaoRegistroRepository vacinacaoRegistroRepository;
 
     public VacinacaoService(
             TenantContext tenantContext,
             MunicipioRepository municipioRepository,
-            VacinacaoDadosRepository vacinacaoDadosRepository) {
+            VacinacaoDadosRepository vacinacaoDadosRepository,
+            UnidadeSaudeRepository unidadeSaudeRepository,
+            UsuarioRepository usuarioRepository,
+            VacinacaoRegistroRepository vacinacaoRegistroRepository) {
         this.tenantContext = tenantContext;
         this.municipioRepository = municipioRepository;
         this.vacinacaoDadosRepository = vacinacaoDadosRepository;
+        this.unidadeSaudeRepository = unidadeSaudeRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.vacinacaoRegistroRepository = vacinacaoRegistroRepository;
     }
 
     public List<VacinacaoUnidadeResponse> listarUnidades() {
@@ -102,6 +115,49 @@ public class VacinacaoService {
                 comMetaAtingida,
                 unidades.size(),
                 comCoberturaIndisponivel);
+    }
+
+    @jakarta.transaction.Transactional
+    public VacinacaoUnidadeResponse registrarDose(br.com.gemsbiotec.vacinacao.dto.RegistrarDoseRequest request) {
+        Long municipioId = municipioIdObrigatorio();
+        Long usuarioId = tenantContext.getUsuarioId();
+
+        UnidadeSaude unidade = unidadeSaudeRepository.findByIdETenant(request.unidadeSaudeId(), municipioId)
+                .orElseThrow(() -> new NotFoundException("Unidade de saude nao encontrada."));
+
+        LocalDate hoje = LocalDate.now();
+        VacinacaoDados snapshot = vacinacaoDadosRepository.findByUnidadeEData(unidade.getId(), hoje)
+                .orElseGet(() -> {
+                    VacinacaoDados novo = new VacinacaoDados();
+                    novo.setUnidadeSaude(unidade);
+                    novo.setDataReferencia(hoje);
+                    novo.setOrigem(br.com.gemsbiotec.dominio.vacinacao.OrigemVacinacao.MANUAL);
+                    vacinacaoDadosRepository.persist(novo);
+                    return novo;
+                });
+
+        if (request.faixaEtaria() == br.com.gemsbiotec.dominio.vacinacao.FaixaEtariaVacinacao.FAIXA_10_14) {
+            snapshot.setDoses10a14(snapshot.getDoses10a14() + request.quantidade());
+        } else {
+            snapshot.setDoses18a59(snapshot.getDoses18a59() + request.quantidade());
+        }
+        snapshot.setDosesTotal(snapshot.getDoses10a14() + snapshot.getDoses18a59());
+
+        VacinacaoRegistro registro = new VacinacaoRegistro();
+        registro.setUnidadeSaude(unidade);
+        registro.setFaixaEtaria(request.faixaEtaria());
+        registro.setQuantidade(request.quantidade());
+        registro.setObservacoes(request.observacoes());
+        if (usuarioId != null) {
+            usuarioRepository.findAtivoByIdETenant(usuarioId, municipioId).ifPresent(registro::setUsuario);
+        }
+        vacinacaoRegistroRepository.persist(registro);
+        vacinacaoDadosRepository.flush();
+
+        return listarUnidades().stream()
+                .filter(u -> u.unidadeSaudeId().equals(unidade.getId()))
+                .findFirst()
+                .orElseThrow();
     }
 
     private Map<Long, List<VacinacaoDados>> agruparPorUnidade(List<VacinacaoDados> registros) {

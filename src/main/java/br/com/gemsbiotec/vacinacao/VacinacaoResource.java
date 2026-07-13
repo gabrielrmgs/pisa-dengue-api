@@ -2,11 +2,14 @@ package br.com.gemsbiotec.vacinacao;
 
 import java.util.List;
 
+import br.com.gemsbiotec.vacinacao.dto.RegistrarDoseRequest;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoResumoResponse;
 import br.com.gemsbiotec.vacinacao.dto.VacinacaoUnidadeResponse;
 import jakarta.annotation.security.RolesAllowed;
+import jakarta.validation.Valid;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
@@ -39,5 +42,13 @@ public class VacinacaoResource {
     @Operation(summary = "Indicadores de vacinacao por unidade de saude")
     public List<VacinacaoUnidadeResponse> unidades() {
         return service.listarUnidades();
+    }
+
+    @POST
+    @Path("/registros")
+    @RolesAllowed({ "ADMIN", "GESTOR", "AGENTE" })
+    @Operation(summary = "Registra doses aplicadas manualmente para uma unidade, fora do ciclo de importacao do SI-PNI")
+    public VacinacaoUnidadeResponse registrarDose(@Valid RegistrarDoseRequest request) {
+        return service.registrarDose(request);
     }
 }
