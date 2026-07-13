@@ -20,7 +20,6 @@ import br.com.gemsbiotec.saude.dto.CriarUnidadeSaudeRequest;
 import br.com.gemsbiotec.saude.dto.UnidadeSaudeResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.NotAuthorizedException;
 import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.WebApplicationException;
@@ -148,7 +147,7 @@ public class UnidadeSaudeService {
         unidade.setTelefone(normalizarTexto(telefone));
         unidade.setEmail(normalizarEmail(email));
         unidade.setResponsavel(normalizarTexto(responsavel));
-        unidade.setBairro(resolverBairro(bairroId));
+        unidade.setBairro(resolverBairroPorCoordenada(longitude, latitude));
         unidade.setLatitude(latitude);
         unidade.setLongitude(longitude);
         unidade.setLocalizacao(criarPonto(longitude, latitude));
@@ -163,12 +162,14 @@ public class UnidadeSaudeService {
                 .orElseThrow(() -> new NotFoundException("Unidade de saude nao encontrada."));
     }
 
-    private Bairro resolverBairro(Long bairroId) {
-        if (bairroId == null) {
+    private Bairro resolverBairroPorCoordenada(Double longitude, Double latitude) {
+        if (longitude == null || latitude == null) {
             return null;
         }
-        return bairroRepository.findByIdETenant(bairroId, municipioIdObrigatorio())
-                .orElseThrow(() -> new BadRequestException("Bairro nao pertence ao municipio logado."));
+        Long municipioId = municipioIdObrigatorio();
+        return bairroRepository.findBairroQueContemPonto(longitude, latitude, municipioId)
+                .or(() -> bairroRepository.findBairroMaisProximo(longitude, latitude, municipioId))
+                .orElse(null);
     }
 
     private Long municipioIdObrigatorio() {
