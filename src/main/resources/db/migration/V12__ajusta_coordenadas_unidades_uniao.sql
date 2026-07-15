@@ -12,7 +12,7 @@ BEGIN
     SELECT ST_Y(ST_Centroid(geometria)), ST_X(ST_Centroid(geometria))
       INTO v_vnc_lat, v_vnc_lon
       FROM bairros
-     WHERE municipio_id = v_municipio_id AND nome ILIKE 'Vila Nova Conquista'
+     WHERE municipio_id = v_municipio_id AND nm_bairro ILIKE 'Vila Nova Conquista'
      LIMIT 1;
 
     -- Corrige a posicao das unidades de Uniao inseridas pela V11 (que usou o
@@ -57,7 +57,7 @@ BEGIN
                localizacao = ST_SetSRID(ST_MakePoint(v_vnc_lon, v_vnc_lat), 4326),
                bairro_id = (
                    SELECT b.id FROM bairros b
-                    WHERE b.municipio_id = v_municipio_id AND b.nome ILIKE 'Vila Nova Conquista'
+                    WHERE b.municipio_id = v_municipio_id AND b.nm_bairro ILIKE 'Vila Nova Conquista'
                     LIMIT 1
                )
          WHERE u.municipio_id = v_municipio_id
