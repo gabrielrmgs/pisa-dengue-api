@@ -14,5 +14,6 @@ public record VacinacaoResumoResponse(
         Double coberturaMediaPercentual,
         Integer unidadesComMetaAtingida,
         Integer totalUnidades,
-        Integer unidadesComCoberturaIndisponivel) {
+        Integer unidadesComCoberturaIndisponivel,
+        Integer unidadesComDadoInconsistente) {
 }

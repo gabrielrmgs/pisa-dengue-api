@@ -20,6 +20,15 @@ public final class VacinacaoCoberturaCalculator {
         return Math.round(doses * 10000.0 / populacaoAlvo) / 100.0;
     }
 
+    /**
+     * Cobertura acima de 100% e matematicamente impossivel e indica que a populacao-alvo
+     * do bairro (censo IBGE do poligono) nao corresponde a real area atendida pela unidade
+     * (comum em UBS rurais cujo ponto geografico cai num bairro censitario pequeno).
+     */
+    public static boolean isInconsistente(Double coberturaPercentual) {
+        return coberturaPercentual != null && coberturaPercentual > 100.0;
+    }
+
     public static Integer meta90(Integer populacaoAlvo) {
         if (populacaoAlvo == null) {
             return null;

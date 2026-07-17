@@ -87,15 +87,25 @@ public class VacinacaoService {
         List<Double> coberturasDisponiveis = new ArrayList<>();
         int comCoberturaIndisponivel = 0;
         int comMetaAtingida = 0;
+        int comDadoInconsistente = 0;
         for (VacinacaoUnidadeResponse unidade : unidades) {
+            if ("DADO_INCONSISTENTE".equals(unidade.statusCobertura())) {
+                comDadoInconsistente++;
+            }
             if (unidade.cobertura10a14Percentual() == null && unidade.cobertura18a59Percentual() == null) {
                 comCoberturaIndisponivel++;
                 continue;
             }
-            if (unidade.cobertura10a14Percentual() != null) {
+            // Valores >100% sao matematicamente impossiveis (populacao-alvo do bairro nao
+            // reflete a area real atendida pela unidade) e sao excluidos da media para nao
+            // distorcer a cobertura media do municipio; a unidade continua listada e o
+            // dado bruto (doses) permanece visivel, so a media agregada os ignora.
+            if (unidade.cobertura10a14Percentual() != null
+                    && !VacinacaoCoberturaCalculator.isInconsistente(unidade.cobertura10a14Percentual())) {
                 coberturasDisponiveis.add(unidade.cobertura10a14Percentual());
             }
-            if (unidade.cobertura18a59Percentual() != null) {
+            if (unidade.cobertura18a59Percentual() != null
+                    && !VacinacaoCoberturaCalculator.isInconsistente(unidade.cobertura18a59Percentual())) {
                 coberturasDisponiveis.add(unidade.cobertura18a59Percentual());
             }
             if ("META_ATINGIDA".equals(unidade.statusCobertura())) {
@@ -118,7 +128,8 @@ public class VacinacaoService {
                 coberturaMedia,
                 comMetaAtingida,
                 unidades.size(),
-                comCoberturaIndisponivel);
+                comCoberturaIndisponivel,
+                comDadoInconsistente);
     }
 
     @jakarta.transaction.Transactional
@@ -263,6 +274,16 @@ public class VacinacaoService {
                 ? Math.min(cobertura10a14, cobertura18a59)
                 : (cobertura10a14 != null ? cobertura10a14 : cobertura18a59);
 
+        // Cobertura >100% numa das faixas indica que a populacao-alvo do bairro nao reflete
+        // a area real atendida pela unidade (ver VacinacaoCoberturaCalculator.isInconsistente).
+        // O status representativo (que usa o MIN das duas faixas) pode mascarar isso quando a
+        // outra faixa tem cobertura baixa, entao checa-se cada faixa individualmente.
+        boolean dadoInconsistente = VacinacaoCoberturaCalculator.isInconsistente(cobertura10a14)
+                || VacinacaoCoberturaCalculator.isInconsistente(cobertura18a59);
+        String statusCobertura = dadoInconsistente
+                ? "DADO_INCONSISTENTE"
+                : VacinacaoCoberturaCalculator.statusCampanha(coberturaRepresentativa);
+
         return new VacinacaoUnidadeResponse(
                 unidade.getId(),
                 unidade.getNome(),
@@ -281,7 +302,7 @@ public class VacinacaoService {
                 meta18a59,
                 VacinacaoCoberturaCalculator.faltamParaMeta(atual.getDoses10a14(), meta10a14),
                 VacinacaoCoberturaCalculator.faltamParaMeta(atual.getDoses18a59(), meta18a59),
-                VacinacaoCoberturaCalculator.statusCampanha(coberturaRepresentativa));
+                statusCobertura);
     }
 
     private int nz(Integer value) {
